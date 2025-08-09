@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 
 
 const ResetPassword = () => {
+
+
   const [newpassword, setNewPassword] = useState('');
 
   {
@@ -16,6 +18,7 @@ const ResetPassword = () => {
 
       setNewPassword('');
     };
+
     return (
       <View style={styles.container}>
         <Text style={styles.heading}>Reset Password</Text>
@@ -34,6 +37,7 @@ const ResetPassword = () => {
         </TouchableOpacity>
 
       </View>
+
 
     );
   };

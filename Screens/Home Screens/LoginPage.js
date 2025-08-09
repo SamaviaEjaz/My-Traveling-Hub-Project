@@ -1,7 +1,6 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, showPassword } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Entypo } from '@expo/vector-icons';
 
 const LoginPage = () => {
   const navigation = useNavigation();
@@ -10,11 +9,6 @@ const LoginPage = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-
-   const togglePassword = () => {
-    console.log("toggle");
-  }
 
   const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -34,11 +28,11 @@ const LoginPage = () => {
     let valid = true;
 
 
-    if (fullName.trim().toLowerCase() === 'driver') {
+     if (fullName.trim().toLowerCase() === 'driver') {
       navigation.navigate('Driver_Dashboard');
     } else if (fullName.trim().toLowerCase() === 'passenger') {
       navigation.navigate('Passenger_Dashboard');
-    } else {
+    }else {
       alert('Only Driver, Passenger are allowed in this demo.');
     }
 
@@ -52,15 +46,6 @@ const LoginPage = () => {
     } else {
       setEmailError('');
     }
-    if (!password) {
-      setPasswordError('Password is required');
-      valid = false;
-    } else if (!isValidPassword(password)) {
-      setPasswordError('Password must be at least 8 characters, include uppercase, lowercase, number, and special character');
-      valid = false;
-    } else {
-      setPasswordError('');
-    }
 
     setFullName('');
     setEmail('');
@@ -70,47 +55,30 @@ const LoginPage = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Login</Text>
-
-      <View style={styles.inputContainer}>
-        <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={fullName}
-          onChangeText={setFullName}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        value={fullName}
+        onChangeText={setFullName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
       {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-      <View style={styles.inputContainer}>
-        <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={!showPassword}
-        />
-        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-          {showPassword ? (
-            <Entypo name="eye" size={20} color="black" />
-          ) : (
-            <Entypo name="eye-with-line" size={20} color="black" />
-          )}
-        </TouchableOpacity>
-      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        keyboardType="default"
+        secureTextEntry={true}
+      />
 
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
@@ -153,26 +121,17 @@ const styles = StyleSheet.create({
     marginTop: 50,
     padding: 20,
   },
- inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  input: {
+    height: 50,
     borderColor: '#ccc',
     borderWidth: 2,
+    marginBottom: 5,
+    paddingHorizontal: 15,
     borderRadius: 3,
-    margin: 7,
     backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-  },
-  icon: {
-    width: 30,
-    height: 20,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 50,
     fontSize: 16,
     color: '#333',
+    margin: 15,
   },
   button: {
     backgroundColor: '#1215efff',
@@ -192,9 +151,6 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 5,
   },
-    eyeIcon: {
-    padding: 5,
-  }
 });
 
 export default LoginPage;
