@@ -1,6 +1,7 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { Entypo } from '@expo/vector-icons';
 
 const PassengerRegister = () => {
   const navigation = useNavigation();
@@ -10,6 +11,11 @@ const PassengerRegister = () => {
   const [password, setPassword] = useState('');
   const [confirmpassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = () => {
+    console.log("toggle");
+  }
 
   const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -17,23 +23,9 @@ const PassengerRegister = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
-
-
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const isValidPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/;
-    return passwordRegex.test(password);
-  };
-
-  const isValidPhone = (phone) => {
-    const phoneRegex = /^03[0-9]{9}$/;
-    return phoneRegex.test(phone);
-  };
-
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPassword = (password) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/.test(password);
+  const isValidPhone = (phone) => /^03[0-9]{9}$/.test(phone);
 
   const handleRegister = () => {
     let valid = true;
@@ -41,9 +33,7 @@ const PassengerRegister = () => {
     if (!fullName) {
       setFullNameError('Full name is required');
       valid = false;
-    } else {
-      setFullNameError('');
-    }
+    } else setFullNameError('');
 
     if (!email) {
       setEmailError('Email is required');
@@ -51,19 +41,15 @@ const PassengerRegister = () => {
     } else if (!isValidEmail(email)) {
       setEmailError('Email must be example@.com');
       valid = false;
-    } else {
-      setEmailError('');
-    }
+    } else setEmailError('');
 
     if (!password) {
       setPasswordError('Password is required');
       valid = false;
     } else if (!isValidPassword(password)) {
-      setPasswordError('Password must be at least 8 characters, include uppercase, lowercase, number, and special character');
+      setPasswordError('Password must include uppercase, lowercase, number, and special char');
       valid = false;
-    } else {
-      setPasswordError('');
-    }
+    } else setPasswordError('');
 
     if (!confirmpassword) {
       setConfirmPasswordError('Confirm Password is required');
@@ -71,19 +57,14 @@ const PassengerRegister = () => {
     } else if (password !== confirmpassword) {
       setConfirmPasswordError('Passwords do not match');
       valid = false;
-    } else {
-      setConfirmPasswordError('');
-    }
+    } else setConfirmPasswordError('');
 
     if (!isValidPhone(phone)) {
       setPhoneError('Phone number must start with 03 and be 11 digits');
       valid = false;
-    } else {
-      setPhoneError('');
-    }
+    } else setPhoneError('');
 
     if (!valid) return;
-
 
     console.log('FullName:', fullName);
     console.log('Email:', email);
@@ -98,7 +79,6 @@ const PassengerRegister = () => {
     setPhone('');
 
     navigation.navigate('Passenger_Dashboard');
-
   };
 
   return (
@@ -106,62 +86,88 @@ const PassengerRegister = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>Passenger Register</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={fullName}
-          onChangeText={setFullName}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+        </View>
         {fullNameError ? <Text style={styles.error}>{fullNameError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
         {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          keyboardType="default"
-          secureTextEntry={true}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            {showPassword ? (
+              <Entypo name="eye" size={20} color="black" />
+            ) : (
+              <Entypo name="eye-with-line" size={20} color="black" />
+            )}
+          </TouchableOpacity>
+        </View>
+
         {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmpassword}
-          onChangeText={setConfirmPassword}
-          keyboardType="default"
-          secureTextEntry={true}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={confirmpassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showPassword}
+          />
+           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            {showPassword ? (
+              <Entypo name="eye" size={20} color="black" />
+            ) : (
+              <Entypo name="eye-with-line" size={20} color="black" />
+            )}
+          </TouchableOpacity>
+        </View>
         {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="numeric"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/phonelogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="numeric"
+          />
+        </View>
         {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
-
 
         <TouchableOpacity style={styles.button} onPress={handleRegister}>
           <Text style={styles.buttontext}>Register</Text>
         </TouchableOpacity>
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: '10' }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
           <Text>Already have an account? </Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('LoginPage')}>
+          <TouchableOpacity onPress={() => navigation.navigate('LoginPage')}>
             <Text style={{ color: '#0d09fca3', fontWeight: 'bold' }}>Login</Text>
           </TouchableOpacity>
         </View>
@@ -185,17 +191,28 @@ const styles = StyleSheet.create({
     marginTop: 30,
     padding: 20,
   },
-  input: {
-    height: 50,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderColor: '#ccc',
     borderWidth: 2,
-    marginBottom: 5,
-    paddingHorizontal: 15,
-    borderRadius: 3,
+    marginBottom: 10,
+    borderRadius: 5,
     backgroundColor: '#FFF',
+    marginHorizontal: 15,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  input: {
+    flex: 1,
+    height: 50,
     fontSize: 16,
     color: '#333',
-    margin: 15,
   },
   button: {
     backgroundColor: '#290cffff',
@@ -215,6 +232,9 @@ const styles = StyleSheet.create({
     marginLeft: 20,
     marginBottom: 5,
   },
+    eyeIcon: {
+    padding: 5,
+  }
 });
 
 export default PassengerRegister;

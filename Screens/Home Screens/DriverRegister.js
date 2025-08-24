@@ -1,8 +1,7 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-
+import { Entypo } from '@expo/vector-icons';
 
 const DriverRegister = () => {
   const navigation = useNavigation();
@@ -12,14 +11,17 @@ const DriverRegister = () => {
   const [password, setPassword] = useState('');
   const [confirmpassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = () => {
+    console.log("toggle");
+  }
 
   const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [phoneError, setPhoneError] = useState('');
-
-
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -99,7 +101,6 @@ const DriverRegister = () => {
     setPhone('');
 
     navigation.navigate('UploadImages');
-
   };
 
   return (
@@ -107,60 +108,85 @@ const DriverRegister = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>Passenger Register</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Full Name"
-          value={fullName}
-          onChangeText={setFullName}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+        </View>
         {fullNameError ? <Text style={styles.error}>{fullNameError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
         {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-        <View style={styles.passwordContainer}>
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
           <TextInput
-            style={styles.inputField}
+            style={styles.input}
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry={!showPassword}
           />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="gray" />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            {showPassword ? (
+              <Entypo name="eye" size={20} color="black" />
+            ) : (
+              <Entypo name="eye-with-line" size={20} color="black" />
+            )}
           </TouchableOpacity>
         </View>
+
         {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          value={confirmpassword}
-          onChangeText={setConfirmPassword}
-          keyboardType="default"
-          secureTextEntry={true}
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={confirmpassword}
+            onChangeText={setConfirmPassword}
+            keyboardType="default"
+            secureTextEntry={!showPassword}
+          />
+           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            {showPassword ? (
+              <Entypo name="eye" size={20} color="black" />
+            ) : (
+              <Entypo name="eye-with-line" size={20} color="black" />
+            )}
+          </TouchableOpacity>
+        </View>
         {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Phone"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="numeric"
-        />
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/phonelogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="numeric"
+          />
+        </View>
         {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
 
 
-        <TouchableOpacity style={styles.uploadbutton} onPress={handleRegister}>
-          <Text style={styles.buttontext}>Upload Image</Text>
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttontext}>Next</Text>
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: '10' }}>
@@ -169,7 +195,6 @@ const DriverRegister = () => {
             onPress={() => navigation.navigate('LoginPage')}>
             <Text style={{ color: '#0d09fca3', fontWeight: 'bold' }}>Login</Text>
           </TouchableOpacity>
-
         </View>
       </ScrollView>
     </View>
@@ -191,37 +216,50 @@ const styles = StyleSheet.create({
     marginTop: 30,
     padding: 20,
   },
-  input: {
-    height: 50,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderColor: '#ccc',
     borderWidth: 2,
-    marginBottom: 5,
-    paddingHorizontal: 15,
-    borderRadius: 3,
+    marginBottom: 10,
+    borderRadius: 5,
     backgroundColor: '#FFF',
+    marginHorizontal: 15,
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 30,
+    height: 30,
+    marginRight: 10,
+    resizeMode: 'contain',
+  },
+  input: {
+    flex: 1,
+    height: 50,
     fontSize: 16,
     color: '#333',
-    margin: 15,
   },
-  uploadbutton: {
-    backgroundColor: '#a39cacff',
-    padding: 15,
-    borderRadius: 5,
+  button: {
+    backgroundColor: '#290cffff',
+    padding: 16,
+    borderRadius: 15,
     alignItems: 'center',
-    marginHorizontal: 17,
     marginTop: 15,
+    marginHorizontal: 50,
   },
   buttontext: {
     color: 'white',
     fontSize: 15,
     fontWeight: 'bold',
   },
-
   error: {
     color: 'red',
     marginLeft: 20,
     marginBottom: 5,
   },
+    eyeIcon: {
+    padding: 5,
+  }
 });
 
 export default DriverRegister;
