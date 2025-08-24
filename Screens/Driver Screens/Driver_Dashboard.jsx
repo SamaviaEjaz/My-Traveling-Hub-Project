@@ -1,21 +1,50 @@
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import React from 'react';
-import Chat from './ChatTemp';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+
 import Home from './Home';
+import Chat from './ChatTemp';
+import Feedback from './Feedback';
 import Profile from './Profile';
-import Reviews from './Reviews';
 
 const Tab = createBottomTabNavigator();
 
-const Driver_Dashboard = () => {
+const Passenger_Dashboard = () => {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator
+      Options={({ route }) => ({
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarIcon: ({ focused }) => {
+          let iconName;
+          let iconSize = 30;
+
+          switch (route.name) {
+            case 'Home':
+              iconName = 'home';
+              break;
+            case 'Chat':
+              iconName = 'chatbubbles';
+              break;
+            case 'Feedback':
+              iconName = 'star';
+              iconSize = focused ? 35 : 30; 
+              break;
+            case 'Profile':
+              iconName = 'person';
+              break;
+          }
+
+          return <Ionicons name={iconName} size={iconSize} color={focused ? 'blue' : 'gray'} />;
+        },
+      })}
+    >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Chat" component={Chat} />
-      <Tab.Screen name="Reviews" component={Reviews} />
+      <Tab.Screen name="Feedback" component={Feedback} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
 };
 
-export default Driver_Dashboard;
+export default Passenger_Dashboard;
