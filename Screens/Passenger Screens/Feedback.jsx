@@ -3,12 +3,27 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Rating } from 'react-native-ratings';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import axios from "axios";
 
 const Feedback = () => {
-    const navigation = useNavigation();
-  
+  const navigation = useNavigation();
+
   const [comment, setComment] = useState('');
   const [rating, setRating] = useState(0);
+  const handleSubmit = async () => {
+    try {
+      await axios.post("http://10.101.99.73:5000/api/reviews", {
+        driverName: "Muhammad Moosa", // yaha wo driver jisko review dena hai
+        rating,
+        comment,
+      });
+      alert("Review submitted!");
+      navigation.navigate("DriverReviews"); // review page pe redirect
+    } catch (error) {
+      console.error(error);
+      alert("Error submitting review");
+    }
+  };
 
   return (
     <SafeAreaView>
@@ -27,11 +42,12 @@ const Feedback = () => {
           style={styles.input}
           placeholder="Write your comment"
           value={comment}
-          onChangeText={setComment}/>
+          onChangeText={setComment} />
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttontext}>Submit</Text>
         </TouchableOpacity>
+
       </View>
     </SafeAreaView>
   );

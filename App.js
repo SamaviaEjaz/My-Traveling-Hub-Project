@@ -3,7 +3,18 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 
-
+import AdminLogin from './Screens/Home Screens/Admin Login';
+import DriverRegister from './Screens/Home Screens/DriverRegister';
+import Forget from './Screens/Home Screens/Forget';
+import LoginPage from './Screens/Home Screens/LoginPage';
+import PassengerLogin from './Screens/Home Screens/PassengerLogin';
+import OTP from './Screens/Home Screens/OTP';
+import PassengerRegister from './Screens/Home Screens/PassengerRegister';
+import Pending from './Screens/Home Screens/Pending';
+import Register from './Screens/Home Screens/Register';
+import ResetPassword from './Screens/Home Screens/Reset Password';
+import UploadImages from './Screens/Home Screens/UploadImages';
+import WelCome from './Screens/Home Screens/WelCome';
 import Admin_UpdateProfile from './Screens/Admin_Dashboard/Admin_Update Profile';
 import AdminDashboard from './Screens/Admin_Dashboard/AdminDashboard';
 import DriversAuthorization from './Screens/Admin_Dashboard/DriversAuthorization';
@@ -13,8 +24,8 @@ import AdminProfile from './Screens/Admin_Dashboard/Profile';
 import ViewRegisteredDriver from './Screens/Admin_Dashboard/View Registered Driver';
 
 import DriverChat from './Screens/Driver Screens/ChatTemp';
-import DriverMessages from './Screens/Driver Screens/Messages';
 import Driver_Dashboard from './Screens/Driver Screens/Driver_Dashboard';
+import Driver_Name from './Screens/Driver Screens/Driver_Name';
 import DriverFeedback from './Screens/Driver Screens/Feedback';
 import DriverHome from './Screens/Driver Screens/Home';
 import DriverProfile from './Screens/Driver Screens/Profile';
@@ -35,6 +46,7 @@ import Passenger_UpdateProfile from './Screens/Passenger Screens/Passenger_Updat
 import PassengerProfile from './Screens/Passenger Screens/Profile';
 import PassengersReviews from './Screens/Passenger Screens/Reviews';
 import ViewBookingStatus from './Screens/Passenger Screens/View Booking Status';
+import GiveComplaint from './Screens/Passenger Screens/GiveComplaint';
 
 
 
@@ -44,13 +56,12 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="WelCome">
-
-
         <Stack.Screen name="WelCome" component={WelCome} />
         <Stack.Screen name="LoginPage" component={LoginPage} options={{ title: 'LoginPage', headerStyle: 60 }} />
         <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="AdminLogin" component={AdminLogin} 
-         options={({ navigation }) => ({
+        <Stack.Screen name="PassengerLogin" component={PassengerLogin} />
+        <Stack.Screen name="AdminLogin" component={AdminLogin}
+          options={({ navigation }) => ({
             title: 'AdminLogin',
             headerStyle: {
               backgroundColor: '#8ca3bdf8',
@@ -98,13 +109,64 @@ export default function App() {
         <Stack.Screen name="Reset Password" component={ResetPassword} />
         <Stack.Screen name="Pending" component={Pending} />
 
-       
+        <Stack.Screen
+          name="AdminDashboard"
+          component={AdminDashboard}
+          options={({ navigation }) => ({
+            title: 'Admin Dashboard',
+            headerStyle: {
+              backgroundColor: '#2f74f5',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          })}
+        />
+        <Stack.Screen name="AdminHome" component={AdminHome}
+          options={{
+            title: 'AdminHome',
+            headerStyle: {
+              backgroundColor: '#2f74f5',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} />
+        <Stack.Screen name="AdminProfile" component={AdminProfile}
+          options={{
+            title: 'AdminProfile',
+            headerStyle: {
+              backgroundColor: '#2f74f5',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }} />
+        <Stack.Screen name="Complaint" component={Complaint} />
+        <Stack.Screen name="DriversAuthorization" component={DriversAuthorization}
+          options={{
+            title: 'DriversAuthorizaiton',
+            headerStyle: {
+              backgroundColor: '#2f74f5',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        />
+        <Stack.Screen name="View Registered Driver" component={ViewRegisteredDriver} />
+
+        <Stack.Screen name="Admin_UpdateProfile" component={Admin_UpdateProfile} />
 
 
         <Stack.Screen name="Driver_Dashboard" component={Driver_Dashboard} />
+        <Stack.Screen name="Driver_Name" component={Driver_Name} />
         <Stack.Screen name="DriverHome" component={DriverHome} />
         <Stack.Screen name="DriverChat" component={DriverChat} />
-        <Stack.Screen name="DriverMessages" component={DriverMessages} />
         <Stack.Screen name="DriversReviews" component={DriversReviews} />
         <Stack.Screen name="DriverProfile" component={Driver_UpdateProfile} />
         <Stack.Screen name="Driver_UpdateProfile" component={Driver_UpdateProfile} />
@@ -141,6 +203,8 @@ export default function App() {
         <Stack.Screen name="PassengerProfile" component={PassengerProfile} />
         <Stack.Screen name="Passenger_UpdateProfile" component={Passenger_UpdateProfile} />
         <Stack.Screen name="PassengerFeedback" component={PassengerFeedback} />
+        <Stack.Screen name="GiveComplaint" component={GiveComplaint} />
+
         <Stack.Screen name="Messages" component={Messages}
           options={{
             title: 'Messages',

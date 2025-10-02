@@ -1,51 +1,55 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-
+import axios from 'axios';
 
 const Forget = () => {
   const navigation = useNavigation();
-
-
   const [email, setEmail] = useState('');
-
   const [emailError, setEmailError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleRegister = () => {
-    let valid = true;
-
-
-    if (!email) {
-      setEmailError('Email is required');
-      valid = false;
-    } else if (!isValidEmail(email)) {
-      setEmailError('Email must be name@example.com');
-      valid = false;
-    } else {
-      setEmailError('');
+  const handleSendOTP = async () => {
+    // Validate email
+    if (!email.trim()) {
+      setEmailError('Please enter your email');
+      return;
     }
-
-    if (!valid) return;
-
-
-    console.log('Email:', email);
-
-    setEmail('');
-
-    navigation.navigate('OTP')
-
+    
+    if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email');
+      return;
+    }
+    
+    setEmailError('');
+    setIsLoading(true);
+    
+    try {
+      const response = await axios.post("http://10.208.141.73:5000/api/send-otp", { email: email.trim() });
+      
+      if (response.data.success) {
+        Alert.alert('Success', 'OTP sent to your email');
+        navigation.navigate('OTP', { email: email.trim() });
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Send OTP Error:', error.response?.data || error.message);
+      Alert.alert('Error', 
+        error.response?.data?.message || 'Network error. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Email</Text>
-
+      <Text style={styles.heading}>Forgot Password</Text>
+      <Text style={styles.subheading}>Enter your email to receive a verification code</Text>
+      
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -53,33 +57,42 @@ const Forget = () => {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        editable={!isLoading}
       />
       {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-
-
-      <TouchableOpacity style={styles.button}
-        onPress={handleRegister}>
-        <Text style={styles.buttontext}>Submit</Text>
+      
+      <TouchableOpacity 
+        style={[styles.button, isLoading && styles.disabledButton]} 
+        onPress={handleSendOTP}
+        disabled={isLoading}
+      >
+        <Text style={styles.buttontext}>
+          {isLoading ? 'Sending...' : 'Send OTP'}
+        </Text>
       </TouchableOpacity>
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     backgroundColor: '#f0f0f0',
   },
   heading: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: 'bold',
-    marginBottom: 30,
+    marginBottom: 10,
     textAlign: 'center',
-    padding: '10',
-    marginTop: '60',
-    paddingTop: '50',
+    color: '#2400ee',
+  },
+  subheading: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 30,
+    color: '#666',
   },
   input: {
     height: 50,
@@ -87,29 +100,32 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     marginBottom: 5,
     paddingHorizontal: 15,
-    borderRadius: 3,
+    borderRadius: 8,
     backgroundColor: '#FFF',
     fontSize: 16,
     color: '#333',
-    margin: 15,
+    marginVertical: 10,
   },
   button: {
-    backgroundColor: '#2400eeff',
+    backgroundColor: '#2400ee',
     padding: 16,
     borderRadius: 15,
     alignItems: 'center',
     marginHorizontal: 60,
-    marginTop: 15,
+    marginTop: 20,
+  },
+  disabledButton: {
+    backgroundColor: '#949494',
   },
   buttontext: {
     color: 'white',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   error: {
     color: 'red',
     marginLeft: 20,
-    marginBottom: 5,
+    marginBottom: 10,
   },
 });
 

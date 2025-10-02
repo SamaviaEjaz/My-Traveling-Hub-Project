@@ -5,7 +5,7 @@ import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-na
 
 const Profile = () => {
   const navigation = useNavigation();
-  const [image, setImage] = useState(require('../../assets/images/Profileimage.png'));
+  const [image, setImage] = useState(require('../../assets/images/ProfilePhoto.png'));
 
   useEffect(() => {
     (async () => {

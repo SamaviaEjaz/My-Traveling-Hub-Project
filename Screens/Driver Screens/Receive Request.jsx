@@ -1,29 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const ViewSharedPost = ({ navigation }) => {
-  const [rides] = useState([
-    {
-      id: '1',
-      driverName: 'Muhammad Moosa',
-      from: 'Lahore',
-      to: 'Islamabad',
-      date: '2025-08-10',
-      Time: '08:00 AM',
-      vehicle: 'Toyota Corolla',
-      seats: 3,
-    },
-    {
-      id: '2',
-      driverName: 'Ali Khan',
-      from: 'Karachi',
-      to: 'Hyderabad',
-      date: '2025-08-12',
-      Time: '02:00 PM',
-      vehicle: 'Honda Civic',
-      seats: 2,
-    },
-  ]);
+const ReceiveRequest = ({ navigation }) => {
+  const [rides, setRides] = useState([]);
+  const updateStatus = (id, status) => {
+    fetch(`http://10.101.99.73:5000/api/bookings/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log(" Status updated:", data);
+        setRides(prev =>
+          prev.map(b => (b.id === id ? { ...b, status } : b))
+        );
+      })
+      .catch(err => console.error(" Error updating status:", err));
+  };
+  useEffect(() => {
+    fetch("http://10.101.99.73:5000/api/bookings")
+      .then(res => res.json())
+      .then(data => {
+        console.log(" Bookings received:", data);
+        setRides(data);
+      })
+      .catch(err => console.error("Error fetching bookings:", err));
+  }, []);
 
   const renderRide = ({ item }) => (
     <View style={styles.card}>
@@ -36,41 +40,39 @@ const ViewSharedPost = ({ navigation }) => {
           <Text style={styles.driverName}>{item.driverName}</Text>
         </View>
       </View>
-
       <Text style={styles.detail}>From: {item.from}</Text>
       <Text style={styles.detail}>To: {item.to}</Text>
       <Text style={styles.detail}>Date: {item.date}</Text>
-      <Text style={styles.detail}>Time: {item.Time}</Text>
+      <Text style={styles.detail}>Time: {item.time}</Text>
       <Text style={styles.detail}>Vehicle: {item.vehicle}</Text>
       <Text style={styles.detail}>Seats: {item.seats}</Text>
-
       <View style={styles.btnRow}>
-        <TouchableOpacity style={styles.acceptBtn}>
+        <TouchableOpacity
+          style={styles.acceptBtn}
+          onPress={() => updateStatus(item.id, "accepted")}>
           <Text style={styles.btnText}>Accept</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.rejectBtn}>
+        <TouchableOpacity
+          style={styles.rejectBtn}
+          onPress={() => updateStatus(item.id, "rejected")}>
           <Text style={styles.btnText}>Reject</Text>
         </TouchableOpacity>
       </View>
-
       <TouchableOpacity style={styles.completeButton}>
         <Text style={styles.completeButtonText}>Ride Completed</Text>
       </TouchableOpacity>
     </View>
   );
-
   return (
     <View style={styles.container}>
       <FlatList
         data={rides}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={renderRide}
       />
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
   card: {
@@ -138,5 +140,4 @@ const styles = StyleSheet.create({
     fontSize: 16
   }
 });
-
-export default ViewSharedPost;
+export default ReceiveRequest;

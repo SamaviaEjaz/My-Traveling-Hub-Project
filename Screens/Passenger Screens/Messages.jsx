@@ -1,24 +1,51 @@
-import React, { useState } from 'react';
-import { FlatList, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {  FlatList,  Keyboard,  KeyboardAvoidingView,   Platform, StyleSheet,  Text,   TextInput,   TouchableOpacity,  TouchableWithoutFeedback, View} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Messages = () => {
+const PassengerMessages = () => {
   const [messages, setMessages] = useState([
     { id: '1', text: 'Hello', sender: 'other' },
-    { id: '2', text: 'Hello, how are you?', sender: 'me' },
+    { id: '2', text: 'Hai', sender: 'me' },
   ]);
   const [inputText, setInputText] = useState('');
+  const flatListRef = useRef(null);
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+      console.log('Scrolled to end');
+    }
+  }, [messages]);
 
   const sendMessage = () => {
-    if (inputText.trim() === '') return;
-
+    console.log('Send button pressed:', inputText);
+    if (inputText.trim() === '') {
+      console.log('Input is empty, ignoring send');
+      return;
+    }
     const newMessage = {
       id: Date.now().toString(),
       text: inputText,
       sender: 'me',
     };
-
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prevMessages => {
+      const updated = [...prevMessages, newMessage];
+      console.log('Added message:', newMessage);
+      return updated;
+    });
     setInputText('');
+    setTimeout(() => {
+      const reply = {
+        id: (Date.now() + 1).toString(),
+        text: 'Got it!',
+        sender: 'other',
+      };
+      setMessages(prevMessages => {
+        const updated = [...prevMessages, reply];
+        console.log('Added reply:', reply);
+        return updated;
+      });
+    }, 2000);
   };
 
   const renderItem = ({ item }) => (
@@ -33,43 +60,54 @@ const Messages = () => {
   );
 
   return (
-  <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} 
-  >
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={{ flex: 1 }}>
-        <FlatList
-          data={messages}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.messagesContainer}
-        />
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Type a message..."
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-            <Text style={styles.sendButtonText}>Send</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableWithoutFeedback>
-  </KeyboardAvoidingView>
-);
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.innerContainer}>
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={item => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.messagesContainer}
+              keyboardShouldPersistTaps="handled"
+            />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Type a message..."
+                returnKeyType="send"
+                onSubmitEditing={sendMessage}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                <Text style={styles.sendButtonText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+  },
+  innerContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   messagesContainer: {
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
   },
   messageBubble: {
     maxWidth: '70%',
@@ -117,5 +155,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-export default Messages;
 
+export default PassengerMessages;

@@ -4,11 +4,14 @@ import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from 'react
 const ViewSharedPost = () => {
   const [rides, setRides] = useState([]);
 
-  // ✅ Fetch Rides
   const fetchRides = () => {
-    fetch("http://10.113.22.73:5000/api/rides")
+    fetch("http://10.101.99.73:5000/api/rides")
       .then(res => res.json())
-      .then(data => setRides(data))
+      .then(data => {
+        if (data.success) {
+          setRides(data.rides);  
+        }
+      })
       .catch(err => console.error(err));
   };
 
@@ -16,22 +19,19 @@ const ViewSharedPost = () => {
     fetchRides();
   }, []);
 
-  // ✅ Delete Ride
   const handleDelete = (id) => {
-    fetch(`http://10.113.22.73:5000/api/rides/${id}`, {
+    fetch(`http://10.101.99.73:5000/api/rides/${id}`, {
       method: "DELETE",
     })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          // Local state se remove
-          setRides((prev) => prev.filter((ride) => ride.id !== id));
+          setRides((prev) => prev.filter((ride) => ride._id !== id));  
         }
       })
       .catch(err => console.error(err));
   };
 
-  // ✅ Render Ride
   const renderRide = ({ item }) => (
     <View style={styles.card}>
       <View style={styles.driverInfo}>
@@ -51,10 +51,9 @@ const ViewSharedPost = () => {
       <Text style={styles.detail}>Vehicle: {item.vehicle}</Text>
       <Text style={styles.detail}>Seats: {item.seats}</Text>
 
-      {/* ✅ Delete Button */}
       <TouchableOpacity 
         style={styles.deleteButton} 
-        onPress={() => handleDelete(item.id)}
+        onPress={() => handleDelete(item._id)}  
       >
         <Text style={styles.deleteButtonText}>Delete Ride</Text>
       </TouchableOpacity>
@@ -65,7 +64,7 @@ const ViewSharedPost = () => {
     <View style={styles.container}>
       <FlatList
         data={rides}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id} 
         renderItem={renderRide}
       />
     </View>

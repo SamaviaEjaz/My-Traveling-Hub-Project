@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Traveling_Hub",
+    "slug": "traveling_Hub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/iconimage.png",
+    "splash": {
+      "image": "./assets/images/SplashScreen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    
+    "ios": {
+      "supportsTablet": true
+    },
+    
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    }
+  }
+}

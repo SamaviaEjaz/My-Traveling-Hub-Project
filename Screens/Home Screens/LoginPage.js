@@ -1,41 +1,30 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import { Entypo } from '@expo/vector-icons';
 
 const LoginPage = () => {
   const navigation = useNavigation();
 
-
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPassword = (password) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{8,}$/.test(password);
 
-  const isValidPassword = (password) => {
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&])[A-Za-z\d@$!%*?#&]{8,}$/;
-    return passwordRegex.test(password);
-  };
-
-  const handleRegister = () => {
+  const handleLogin = async () => {
     let valid = true;
 
-
-     if (fullName.trim().toLowerCase() === 'driver') {
-      navigation.navigate('Driver_Dashboard');
-    } else if (fullName.trim().toLowerCase() === 'passenger') {
-      navigation.navigate('Passenger_Dashboard');
-    }else {
-      alert('Only Driver, Passenger are allowed in this demo.');
+    if (!fullName) {
+      alert('Full Name is required');
+      valid = false;
     }
-
 
     if (!email) {
       setEmailError('Email is required');
@@ -47,62 +36,101 @@ const LoginPage = () => {
       setEmailError('');
     }
 
+    if (!password) {
+      setPasswordError('Password is required');
+      valid = false;
+    } else if (!isValidPassword(password)) {
+      setPasswordError(
+        'Password must be at least 8 characters, include uppercase, lowercase, number, and special character'
+      );
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+
+    if (!valid) return;
+
+    try {
+      const response = await fetch('http://10.101.99.73:5000/api/drivers/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+      console.log('Server response:', data);
+
+      if (response.ok && data.success) {
+        // ✅ Driver ka naam SharePost ko bhejna
+        navigation.navigate('Driver_Dashboard', { driverName: fullName });
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (error) {
+      alert('Error connecting to server: ' + error.message);
+    }
+
     setFullName('');
     setEmail('');
     setPassword('');
-  }
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Login</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={fullName}
-        onChangeText={setFullName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
+      <Text style={styles.heading}>Driver Login</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        keyboardType="default"
-        secureTextEntry={true}
-      />
-
-      {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-
-
-      <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Forget')}>
-          <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
-        </TouchableOpacity>
+      <View style={styles.inputContainer}>
+        <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          value={fullName}
+          onChangeText={setFullName}
+        />
       </View>
 
+      <View style={styles.inputContainer}>
+        <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+      {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+      <View style={styles.inputContainer}>
+        <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPassword}
+        />
+        <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+          {!showPassword ? (
+            <Entypo name="eye" size={24} color="gray" />
+          ) : (
+            <Entypo name="eye-with-line" size={24} color="gray" />
+          )}
+        </TouchableOpacity>
+      </View>
+      {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttontext}>Submit</Text>
       </TouchableOpacity>
 
-      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: '10' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
         <Text>No account? </Text>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Register')}>
-          <Text style={{ color: '#3C29E9A3', fontWeight: 'bold' }}>Register</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <Text style={{ color: '#0d09fca3', fontWeight: 'bold' }}>Register</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
@@ -112,29 +140,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
     backgroundColor: '#f0f0f0',
+    flex: 1,
+    paddingBottom: 90,
   },
   heading: {
-    fontSize: 40,
+    fontSize: 26,
     fontWeight: 'bold',
-    marginBottom: 30,
+    color: '#333',
     textAlign: 'center',
-    marginTop: 50,
-    padding: 20,
+    marginTop: 40,
+    marginBottom: 20,
   },
-  input: {
-    height: 50,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderColor: '#ccc',
     borderWidth: 2,
-    marginBottom: 5,
-    paddingHorizontal: 15,
     borderRadius: 3,
+    margin: 7,
     backgroundColor: '#FFF',
+    paddingHorizontal: 10,
+  },
+  icon: {
+    width: 30,
+    height: 30,
+    marginRight: 8,
+  },
+  input: {
+    flex: 1,
+    height: 50,
     fontSize: 16,
     color: '#333',
-    margin: 15,
   },
   button: {
-    backgroundColor: '#1215efff',
+    backgroundColor: '#6d6fc2ff',
     padding: 16,
     borderRadius: 15,
     alignItems: 'center',
@@ -150,6 +189,9 @@ const styles = StyleSheet.create({
     color: 'red',
     marginLeft: 20,
     marginBottom: 5,
+  },
+  eyeIcon: {
+    padding: 5,
   },
 });
 

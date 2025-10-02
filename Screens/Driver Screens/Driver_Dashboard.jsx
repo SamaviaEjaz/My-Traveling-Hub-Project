@@ -1,50 +1,77 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { Text, View } from 'react-native';
 
 import Home from './Home';
 import Chat from './ChatTemp';
-import Feedback from './Feedback';
+import Reviews from './Reviews';
 import Profile from './Profile';
 
 const Tab = createBottomTabNavigator();
 
-const Passenger_Dashboard = () => {
+const Driver_Dashboard = () => {
   return (
     <Tab.Navigator
-      Options={({ route }) => ({
+      screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: false,
+        tabBarStyle: { 
+          height: 90,        
+          paddingBottom: 12, 
+          paddingTop: 12,    
+        },
+        tabBarItemStyle: {
+          marginHorizontal: -5, 
+        },
         tabBarIcon: ({ focused }) => {
           let iconName;
-          let iconSize = 30;
+          let label;
 
           switch (route.name) {
             case 'Home':
               iconName = 'home';
+              label = 'Home';
               break;
             case 'Chat':
-              iconName = 'chatbubbles';
+              iconName = 'chatbubble-ellipses';
+              label = 'Chat';
               break;
-            case 'Feedback':
+            case 'Reviews':
               iconName = 'star';
-              iconSize = focused ? 35 : 30; 
+              label = 'Feedback';
               break;
             case 'Profile':
               iconName = 'person';
+              label = 'Profile';
               break;
           }
 
-          return <Ionicons name={iconName} size={iconSize} color={focused ? 'blue' : 'gray'} />;
+          return (
+            <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+              <Ionicons name={iconName} size={25} color={focused ? 'blue' : 'gray'} />
+              <Text
+                style={{
+                  fontSize:7,
+                  color: focused ? 'blue' : 'gray',
+                  marginTop:5, 
+                  textAlign: 'center',
+                 
+                }}
+              >
+                {label}
+              </Text>
+            </View>
+          );
         },
       })}
     >
       <Tab.Screen name="Home" component={Home} />
       <Tab.Screen name="Chat" component={Chat} />
-      <Tab.Screen name="Feedback" component={Feedback} />
+      <Tab.Screen name="Reviews" component={Reviews} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
 };
 
-export default Passenger_Dashboard;
+export default Driver_Dashboard;

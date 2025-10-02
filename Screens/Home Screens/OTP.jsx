@@ -1,207 +1,198 @@
-import { Background } from '@react-navigation/elements';
-import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useRef, useState, useEffect } from 'react';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import axios from 'axios';
 
 const OTP = () => {
-   const navigation = useNavigation();
- 
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { email } = route.params || {};
+  
   const et1 = useRef();
   const et2 = useRef();
   const et3 = useRef();
   const et4 = useRef();
   const et5 = useRef();
   const et6 = useRef();
-  const [f1, setF1] = useState('');
-  const [f2, setF2] = useState('');
-  const [f3, setF3] = useState('');
-  const [f4, setF4] = useState('');
-  const [f5, setF5] = useState('');
-  const [f6, setF6] = useState('');
-  const [count, setCount] = useState(0);
-
-
+  
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [count, setCount] = useState(60);
+  const [isLoading, setIsLoading] = useState(false);
+  
   useEffect(() => {
     const interval = setInterval(() => {
-      if (count == 0) {
-        clearInterval(interval)
-      }
-      else {
+      if (count > 0) {
         setCount(count - 1);
+      } else {
+        clearInterval(interval);
       }
     }, 1000);
-    return () =>
-      clearInterval(interval)
-  }, [count]
-  );
+    
+    return () => clearInterval(interval);
+  }, [count]);
 
-  const otpValidate = () => {
-    let otp = '123456';
-    let enterOtp = f1 + f2 + f3 + f4 + f5 + f6;
-    if (enterOtp == otp) {
-      Alert.alert('OTP Matched')
+  const handleOtpChange = (index, value) => {
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    
+    // Auto focus next input
+    if (value && index < 5) {
+      switch(index) {
+        case 0: et2.current.focus(); break;
+        case 1: et3.current.focus(); break;
+        case 2: et4.current.focus(); break;
+        case 3: et5.current.focus(); break;
+        case 4: et6.current.focus(); break;
+      }
     }
-    else {
-      Alert.alert('Wrong OTP')
+    
+    // Auto focus previous input on delete
+    if (!value && index > 0) {
+      switch(index) {
+        case 1: et1.current.focus(); break;
+        case 2: et2.current.focus(); break;
+        case 3: et3.current.focus(); break;
+        case 4: et4.current.focus(); break;
+        case 5: et5.current.focus(); break;
+      }
     }
-    navigation.navigate('Reset Password')
-
   };
 
+  const otpValidate = async () => {
+    const enteredOtp = otp.join('');
+    
+    setIsLoading(true);
+    try {
+      const response = await axios.post("http://10.208.141.73:5000/api/verify-otp", {
+        email,
+        otp: enteredOtp
+      });
+      if (response.data.success) {
+        Alert.alert('Success', 'OTP Verified');
+        navigation.navigate('ResetPassword', { email });
+      } else {
+        Alert.alert('Error', response.data.message || 'Invalid OTP');
+      }
+    } catch (error) {
+      console.error('Verify OTP Error:', error.response?.data || error.message);
+      Alert.alert('Error', 
+        error.response?.status === 404 
+          ? 'API endpoint not found' 
+          : 'Network error. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  const handleResend = async () => {
+    if (count > 0) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await axios.post("http://10.208.141.73:5000/api/send-otp", {
+        email
+      });
+      
+      if (response.data.success) {
+        Alert.alert('Success', 'OTP resent to your email');
+        setCount(60);
+        setOtp(['', '', '', '', '', '']);
+        et1.current.focus();
+      } else {
+        Alert.alert('Error', response.data.message || 'Failed to resend OTP');
+      }
+    } catch (error) {
+      console.error('Resend OTP Error:', error.response?.data || error.message);
+      Alert.alert('Error', 
+        error.response?.status === 404 
+          ? 'API endpoint not found' 
+          : 'Network error. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isOtpComplete = otp.every(digit => digit !== '');
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.Text}>OTP Verification</Text>
+      <Text style={styles.title}>OTP Verification</Text>
+      <Text style={styles.subtitle}>We've sent a code to {email}</Text>
+      
       <View style={styles.OTPView}>
-        <TextInput
-          ref={et1}
-          style={[styles.inputView,
-          { borderColor: f1.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f1}
-          onChangeText={txt => {
-            setF1(txt);
-            if (txt.length >= 1) {
-              et2.current.focus();
-            }
-          }} />
-        <TextInput
-          ref={et2}
-          style={[styles.inputView,
-          { borderColor: f2.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f2}
-          onChangeText={txt => {
-            setF2(txt);
-            if (txt.length >= 1) {
-              et3.current.focus();
-            } else if (txt.length < 1) {
-              et1.current.focus();
-            }
-          }}
-        />
-        <TextInput
-          ref={et3}
-          style={[styles.inputView,
-          { borderColor: f3.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f3}
-          onChangeText={txt => {
-            setF3(txt);
-            if (txt.length >= 1) {
-              et4.current.focus();
-            } else if (txt.length < 1) {
-              et2.current.focus();
-            }
-          }} />
-        <TextInput
-          ref={et4}
-          style={[styles.inputView,
-          { borderColor: f4.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f4}
-          onChangeText={txt => {
-            setF4(txt);
-            if (txt.length >= 1) {
-              et5.current.focus();
-            } else if (txt.length < 1) {
-              et3.current.focus();
-            }
-          }} />
-        <TextInput
-          ref={et5}
-          style={[styles.inputView,
-          { borderColor: f5.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f5}
-          onChangeText={txt => {
-            setF5(txt);
-            if (txt.length >= 1) {
-              et6.current.focus();
-            } else if (txt.length < 1) {
-              et4.current.focus();
-            }
-          }} />
-        <TextInput
-          ref={et6}
-          style={[styles.inputView,
-          { borderColor: f6.length >= 1 ? 'blue' : '#000' }]}
-          keyboardType="number-pad"
-          maxLength={1}
-          value={f6}
-          onChangeText={txt => {
-            setF6(txt);
-            if (txt.length >= 1) {
-              et6.current.focus();
-            } else if (txt.length < 1) {
-              et5.current.focus();
-            }
-          }}
-        />
-
+        {[et1, et2, et3, et4, et5, et6].map((ref, index) => (
+          <TextInput
+            key={index}
+            ref={ref}
+            style={[
+              styles.inputView, 
+              { borderColor: otp[index] ? '#2400ee' : '#ccc' }
+            ]}
+            keyboardType="number-pad"
+            maxLength={1}
+            value={otp[index]}
+            onChangeText={(value) => handleOtpChange(index, value)}
+            editable={!isLoading}
+          />
+        ))}
       </View>
-
+      
       <View style={styles.ResendView}>
-        <Text style=
-          {{ fontSize: 20, fontWeight: '700', color: count == 0 ? 'blue' : 'gray' }}
-          onPress={() => {
-            setCount(60);
-          }}>Resend</Text>
-        {count !== 0 && (
-          <Text style={{ marginLeft: 20, fontSize: 20, }}>{count + 'seconds'}</Text>
-        )}
-
+        <Text style={styles.resendText}>Didn't receive the code?</Text>
+        <TouchableOpacity onPress={handleResend} disabled={count > 0 || isLoading}>
+          <Text style={[
+            styles.resendLink, 
+            (count > 0 || isLoading) && styles.disabledLink
+          ]}>
+            Resend {count > 0 && `(${count}s)`}
+          </Text>
+        </TouchableOpacity>
       </View>
+      
       <TouchableOpacity
-        disabled={
-          f1 !== '' &&
-            f2 !== '' &&
-            f3 !== '' &&
-            f4 !== '' &&
-            f5 !== '' &&
-            f6 !== ''
-            ? false
-            : true
-        }
-        style={
-          [styles.verifyOTPBtn, {
-            backgroundColor:
-              f1 !== '' &&
-                f2 !== '' &&
-                f3 !== '' &&
-                f4 !== '' &&
-                f5 !== '' &&
-                f6 !== ''
-                ? 'blue'
-                : '#949494',
-          },
-          ]} onPress={() => otpValidate()} >
-        <Text style={styles.buttontext}>Verify OTP</Text>
+        style={[
+          styles.verifyOTPBtn,
+          { backgroundColor: isOtpComplete ? '#2400ee' : '#949494' }
+        ]}
+        onPress={otpValidate}
+        disabled={!isOtpComplete || isLoading}
+      >
+        <Text style={styles.buttontext}>
+          {isLoading ? 'Verifying...' : 'Verify OTP'}
+        </Text>
       </TouchableOpacity>
-    </View >
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  Text: {
-    fontSize: 25,
-    fontWeight: '70',
-    marginTop: 100,
+  container: { 
+    flex: 1, 
+    padding: 20,
+    backgroundColor: '#f0f0f0'
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 80,
     alignSelf: 'center',
-    color: '#000',
-
+    color: '#2400ee',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    alignSelf: 'center',
+    color: '#666',
+    marginBottom: 40,
   },
   OTPView: {
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
-    marginTop: 100,
+    marginBottom: 30,
   },
   inputView: {
     width: 45,
@@ -212,25 +203,38 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     margin: 5,
+    backgroundColor: '#fff',
   },
   verifyOTPBtn: {
-    backgroundColor: '#6200EE',
     padding: 16,
     borderRadius: 15,
     alignItems: 'center',
-    marginHorizontal: 60,
-    marginTop: 80,
+    marginTop: 40,
   },
   buttontext: {
     color: 'white',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   ResendView: {
     flexDirection: 'row',
-    alignSelf: 'center',
-    marginTop: 30,
-    marginBottom: 30,
-  }
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  resendText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  resendLink: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#2400ee',
+    marginLeft: 5,
+  },
+  disabledLink: {
+    color: '#949494',
+  },
 });
+  
 export default OTP;
