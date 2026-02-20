@@ -42,7 +42,7 @@ const AdminLogin = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('http://10.101.99.73:5000/api/admin/login', {
+      const response = await fetch('http://10.133.138.73:5000/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -112,6 +112,12 @@ const AdminLogin = () => {
       </View>
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
       
+       <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Forget')}>
+          <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
+        </TouchableOpacity>
+      </View>
       
       <TouchableOpacity 
         style={[styles.button, loading && styles.disabledButton]} 
@@ -191,4 +197,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AdminLogin;
+export default AdminLogin;  

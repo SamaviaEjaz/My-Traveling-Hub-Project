@@ -1,143 +1,149 @@
-import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
+// Driver_UpdateProfile.js
+import React, { useState, useContext } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DriverContext } from './DriverContext';
 
 const Driver_UpdateProfile = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { driverName } = useContext(DriverContext);
+  const { profile: initialProfile } = route.params || {};
+  
+  const [profile, setProfile] = useState({
+    fullName: initialProfile?.fullName || '',
+    email: initialProfile?.email || '',
+    phone: initialProfile?.phone || '',
+  });
 
+  const handleUpdate = async () => {
+    // Validate inputs
+    if (!profile.fullName || !profile.email || !profile.phone) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-
-  const [fullNameError, setFullNameError] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    try {
+      console.log('Updating profile for driver:', driverName);
+      console.log('New profile data:', profile);
+      
+      // Save to AsyncStorage with user-specific key
+      await AsyncStorage.setItem(`driverProfile_${driverName}`, JSON.stringify(profile));
+      
+      // Also update on server if needed
+      try {
+        const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driverName}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: profile.fullName,
+            email: profile.email,
+            phone: profile.phone,
+          }),
+        });
+        
+        const data = await response.json();
+        console.log('Server update response:', data);
+        
+        if (!response.ok || !data.success) {
+          console.log('Server update failed, but local storage updated');
+        }
+      } catch (error) {
+        console.log('Error updating server:', error);
+      }
+      
+      Alert.alert('Success', 'Profile updated successfully');
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      Alert.alert('Error', 'Failed to update profile');
+    }
   };
-  const isValidPhone = (phone) => {
-    const phoneRegex = /^03[0-9]{9}$/;
-    return phoneRegex.test(phone);
-  };
-
-  const handleRegister = () => {
-    let valid = true;
-
-    if (!fullName) {
-      setFullNameError('Full name is required');
-      valid = false;
-    } else {
-      setFullNameError('');
-    }
-
-    if (!email) {
-      setEmailError('Email is required');
-      valid = false;
-    } else if (!isValidEmail(email)) {
-      setEmailError('Email must be example@.com');
-      valid = false;
-    } else {
-      setEmailError('');
-    }
-
-    if (!isValidPhone(phone)) {
-      setPhoneError('Phone number must start with 03 and be 11 digits');
-      valid = false;
-    } else {
-      setPhoneError('');
-    }
-
-
-    if (!valid) return;
-
-    setFullName('');
-    setEmail('');
-    setPhone('');
-  }
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Update Profile</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={fullName}
-        onChangeText={setFullName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Phone"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="numeric"
-      />
-      {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
-
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttontext}>Update</Text>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Full Name</Text>
+        <TextInput
+          style={styles.input}
+          value={profile.fullName}
+          onChangeText={(text) => setProfile({ ...profile, fullName: text })}
+          placeholder="Enter your full name"
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          value={profile.email}
+          onChangeText={(text) => setProfile({ ...profile, email: text })}
+          placeholder="Enter your email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Phone</Text>
+        <TextInput
+          style={styles.input}
+          value={profile.phone}
+          onChangeText={(text) => setProfile({ ...profile, phone: text })}
+          placeholder="Enter your phone number"
+          keyboardType="phone-pad"
+        />
+      </View>
+      
+      <TouchableOpacity style={styles.button} onPress={handleUpdate}>
+        <Text style={styles.buttonText}>Update</Text>
       </TouchableOpacity>
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    justifyContent: 'center',
-    paddingHorizontal: 10,
+    flex: 1,
+    padding: 20,
     backgroundColor: '#f0f0f0',
   },
   heading: {
-    fontSize: 30,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 30,
     textAlign: 'center',
-    marginTop: 50,
-    padding: 20,
+    marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
   },
   input: {
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 2,
-    marginBottom: 5,
-    paddingHorizontal: 15,
-    borderRadius: 3,
-    backgroundColor: '#FFF',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
-    color: '#333',
-    margin: 15,
   },
   button: {
-    backgroundColor: '#1f98cfff',
+    backgroundColor: '#269ee4ff',
     padding: 16,
     borderRadius: 15,
     alignItems: 'center',
-    marginHorizontal: 15,
-    marginTop: 15,
+    marginTop: 20,
   },
-  buttontext: {
-    color: 'white',
-    fontSize: 15,
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
     fontWeight: 'bold',
-  },
-  error: {
-    color: 'red',
-    marginLeft: 20,
-    marginBottom: 5,
   },
 });
 

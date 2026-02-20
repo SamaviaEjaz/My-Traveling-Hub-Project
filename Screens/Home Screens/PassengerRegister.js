@@ -1,8 +1,8 @@
-// PassengerRegister.js
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Entypo } from '@expo/vector-icons';
 
 const PassengerRegister = () => {
   const navigation = useNavigation();
@@ -12,6 +12,9 @@ const PassengerRegister = () => {
   const [confirmpassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [fullNameError, setFullNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -42,7 +45,7 @@ const PassengerRegister = () => {
 
     setLoading(true);
     try {
-      const response = await fetch('http://10.111.240.73:5000/api/passengers/register', {
+      const response = await fetch('http://10.133.138.73:5000/api/passengers/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName, email, password, phone }),
@@ -50,12 +53,13 @@ const PassengerRegister = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // 存储乘客信息，但先不导航到仪表板
         await AsyncStorage.setItem('passengerData', JSON.stringify({ fullName, email, phone }));
 
         Alert.alert(
           'Registration Successful',
-          'Your account has been created successfully!',
-          [{ text: 'OK', onPress: () => navigation.navigate('Passenger_Dashboard') }]
+          'Your account has been created! Please verify your phone number.',
+          [{ text: 'OK', onPress: () => navigation.navigate('Passenger_OTP', { phone }) }]
         );
 
         setFullName('');
@@ -88,15 +92,84 @@ const PassengerRegister = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>Passenger Register</Text>
-        <TextInput style={styles.input} placeholder="Full Name" value={fullName} onChangeText={setFullName} />
+
+        {/* Full Name */}
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Full Name"
+            value={fullName}
+            onChangeText={setFullName}
+          />
+        </View>
         {fullNameError ? <Text style={styles.error}>{fullNameError}</Text> : null}
-        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+
+        {/* Email */}
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
         {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-        <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry={true} />
+
+        {/* Password */}
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+            {!showPassword ? (
+              <Entypo name="eye" size={22} color="gray" />
+            ) : (
+              <Entypo name="eye-with-line" size={22} color="gray" />
+            )}
+          </TouchableOpacity>
+        </View>
         {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-        <TextInput style={styles.input} placeholder="Confirm Password" value={confirmpassword} onChangeText={setConfirmPassword} secureTextEntry={true} />
+
+        {/* Confirm Password */}
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            value={confirmpassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+          />
+          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
+            {!showConfirmPassword ? (
+              <Entypo name="eye" size={22} color="gray" />
+            ) : (
+              <Entypo name="eye-with-line" size={22} color="gray" />
+            )}
+          </TouchableOpacity>
+        </View>
         {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
-        <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone} keyboardType="numeric" />
+
+        {/* Phone */}
+        <View style={styles.inputContainer}>
+          <Image source={require('../../assets/images/PhoneLogo.png')} style={styles.icon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="numeric"
+          />
+        </View>
         {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
 
         <TouchableOpacity style={[styles.button, loading && styles.disabledButton]} onPress={handleRegister} disabled={loading}>
@@ -115,42 +188,25 @@ const PassengerRegister = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    justifyContent: 'center', 
-    paddingHorizontal: 5, 
-    backgroundColor: '#f0f0f0', 
-    paddingBottom: 130 },
-  heading: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginBottom: 30, 
-    textAlign: 'center', 
-    marginTop: 30, 
-    padding: 20 },
-  input: {
-     height: 50, borderColor: '#ccc', 
-     borderWidth: 2,
-      marginBottom: 5, 
-     paddingHorizontal: 15, 
-     borderRadius: 3, 
-     backgroundColor: '#FFF', fontSize: 16, color: '#333', margin: 15 },
-  button: { 
-    backgroundColor: '#290cffff',
-     padding: 16,
-     borderRadius: 15, 
-    alignItems: 'center', 
-    marginTop: 15,
-     marginHorizontal: 50 
+  container: { justifyContent: 'center', paddingHorizontal: 5, backgroundColor: '#f0f0f0', paddingBottom: 130 },
+  heading: { fontSize: 22, fontWeight: 'bold', marginBottom: 30, textAlign: 'center', marginTop: 30 },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#ccc',
+    borderWidth: 2,
+    borderRadius: 3,
+    margin: 10,
+    backgroundColor: '#FFF',
+    paddingHorizontal: 10,
   },
-  disabledButton: { 
-    backgroundColor: '#cccccc' },
-  buttontext: { 
-    color: 'white', 
-    fontSize: 15, 
-    fontWeight: 'bold' },
-  error: { 
-    color: 'red', marginLeft: 20, marginBottom: 5 
-  },
+  icon: { width: 30, height: 30, marginRight: 8 },
+  input: { flex: 1, height: 50, fontSize: 16, color: '#333' },
+  eyeIcon: { padding: 5 },
+  button: { backgroundColor: '#290cffff', padding: 16, borderRadius: 15, alignItems: 'center', marginTop: 15, marginHorizontal: 50 },
+  disabledButton: { backgroundColor: '#cccccc' },
+  buttontext: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+  error: { color: 'red', marginLeft: 20, marginBottom: 5 },
 });
 
 export default PassengerRegister;

@@ -27,19 +27,32 @@ const Forget = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post("http://10.208.141.73:5000/api/send-otp", { email: email.trim() });
+      const response = await axios.post("http://10.190.119.73:5000/api/send-otp", { 
+        email: email.trim() 
+      });
       
       if (response.data.success) {
-        Alert.alert('Success', 'OTP sent to your email');
-        navigation.navigate('OTP', { email: email.trim() });
+        Alert.alert('Success', 'OTP sent to your email', [
+          { text: 'OK', onPress: () => navigation.navigate('OTP', { email: email.trim() }) }
+        ]);
       } else {
         Alert.alert('Error', response.data.message || 'Failed to send OTP');
       }
     } catch (error) {
       console.error('Send OTP Error:', error.response?.data || error.message);
-      Alert.alert('Error', 
-        error.response?.data?.message || 'Network error. Please try again.'
-      );
+      
+      // Handle specific error cases
+      if (error.response?.status === 500) {
+        Alert.alert('Error', 
+          error.response?.data?.error || 'Email service error. Please try again later.'
+        );
+      } else if (error.response?.status === 404) {
+        Alert.alert('Error', 'API endpoint not found. Please check your server configuration.');
+      } else {
+        Alert.alert('Error', 
+          error.response?.data?.message || 'Network error. Please check your connection and try again.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }

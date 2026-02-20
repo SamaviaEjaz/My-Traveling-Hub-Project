@@ -20,6 +20,11 @@ const OTP = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
+    // Focus first input when component mounts
+    if (et1.current) {
+      et1.current.focus();
+    }
+    
     const interval = setInterval(() => {
       if (count > 0) {
         setCount(count - 1);
@@ -62,25 +67,43 @@ const OTP = () => {
   const otpValidate = async () => {
     const enteredOtp = otp.join('');
     
+    if (enteredOtp.length !== 6) {
+      Alert.alert('Error', 'Please enter all 6 digits');
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      const response = await axios.post("http://10.208.141.73:5000/api/verify-otp", {
+      const response = await axios.post("http://10.26.42.73.73:5000/api/verify-otp", {
         email,
         otp: enteredOtp
       });
+      
       if (response.data.success) {
-        Alert.alert('Success', 'OTP Verified');
-        navigation.navigate('ResetPassword', { email });
+        Alert.alert('Success', 'OTP Verified', [
+          { text: 'OK', onPress: () => navigation.navigate('ResetPassword', { email }) }
+        ]);
       } else {
         Alert.alert('Error', response.data.message || 'Invalid OTP');
+        // Reset OTP fields
+        setOtp(['', '', '', '', '', '']);
+        if (et1.current) et1.current.focus();
       }
     } catch (error) {
       console.error('Verify OTP Error:', error.response?.data || error.message);
-      Alert.alert('Error', 
-        error.response?.status === 404 
-          ? 'API endpoint not found' 
-          : 'Network error. Please try again.'
-      );
+      
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        Alert.alert('Error', error.response?.data?.message || 'Invalid OTP');
+      } else if (error.response?.status === 404) {
+        Alert.alert('Error', 'API endpoint not found. Please check your server configuration.');
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      }
+      
+      // Reset OTP fields on error
+      setOtp(['', '', '', '', '', '']);
+      if (et1.current) et1.current.focus();
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +114,7 @@ const OTP = () => {
     
     setIsLoading(true);
     try {
-      const response = await axios.post("http://10.208.141.73:5000/api/send-otp", {
+      const response = await axios.post("http://10.26.42.73.73:5000/api/send-otp", {
         email
       });
       
@@ -99,17 +122,21 @@ const OTP = () => {
         Alert.alert('Success', 'OTP resent to your email');
         setCount(60);
         setOtp(['', '', '', '', '', '']);
-        et1.current.focus();
+        if (et1.current) et1.current.focus();
       } else {
         Alert.alert('Error', response.data.message || 'Failed to resend OTP');
       }
     } catch (error) {
       console.error('Resend OTP Error:', error.response?.data || error.message);
-      Alert.alert('Error', 
-        error.response?.status === 404 
-          ? 'API endpoint not found' 
-          : 'Network error. Please try again.'
-      );
+      
+      // Handle specific error cases
+      if (error.response?.status === 500) {
+        Alert.alert('Error', 
+          error.response?.data?.error || 'Email service error. Please try again later.'
+        );
+      } else {
+        Alert.alert('Error', 'Network error. Please check your connection and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -136,6 +163,7 @@ const OTP = () => {
             value={otp[index]}
             onChangeText={(value) => handleOtpChange(index, value)}
             editable={!isLoading}
+            selectTextOnFocus={true}
           />
         ))}
       </View>

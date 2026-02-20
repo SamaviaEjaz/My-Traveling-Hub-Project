@@ -10,31 +10,34 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 
-const { width } = Dimensions.get('window');
-const ITEM_SIZE = (width - 48) / 2; // two columns with padding + gap
+const { width, height } = Dimensions.get('window');
+const ITEM_SIZE = (width - 48) / 2; 
 
 export default function DriversAuthorization() {
   const route = useRoute();
   const navigation = useNavigation();
   const { driverId } = route.params || {};
   const [driver, setDriver] = useState(null);
-  const [drivers, setDrivers] = useState([]); // For list of drivers
+  const [drivers, setDrivers] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showList, setShowList] = useState(!driverId); // Show list if no driverId
+  const [showList, setShowList] = useState(!driverId); 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
     console.log("DriversAuthorization mounted");
     console.log("Driver ID from params:", driverId);
     
     if (driverId) {
-      // Fetch specific driver
+
       fetchDriver(driverId);
     } else {
-      // Fetch list of pending drivers
+
       fetchPendingDrivers();
     }
   }, [driverId]);
@@ -42,7 +45,7 @@ export default function DriversAuthorization() {
   const fetchDriver = async (id) => {
     try {
       console.log("Fetching driver with ID:", id);
-      const response = await fetch(`http://10.101.99.73:5000/api/drivers/${id}`);
+      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${id}`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -54,7 +57,7 @@ export default function DriversAuthorization() {
       
       if (data.success) {
         setDriver(data.driver);
-        setShowList(false); // Show driver details
+        setShowList(false); 
       } else {
         setError(data.message || "Failed to fetch driver data");
       }
@@ -69,7 +72,7 @@ export default function DriversAuthorization() {
   const fetchPendingDrivers = async () => {
     try {
       console.log("Fetching pending drivers");
-      const response = await fetch(`http://10.101.99.73:5000/api/drivers?status=pending`);
+      const response = await fetch(`http://10.133.138.73:5000/api/drivers?status=pending`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -81,7 +84,7 @@ export default function DriversAuthorization() {
       
       if (data.success) {
         setDrivers(data.drivers || []);
-        setShowList(true); // Show list of drivers
+        setShowList(true); 
       } else {
         setError(data.message || "Failed to fetch pending drivers");
       }
@@ -96,7 +99,7 @@ export default function DriversAuthorization() {
   const handleApprove = async () => {
     try {
       console.log("Approving driver with ID:", driver._id);
-      const response = await fetch(`http://10.101.99.73:5000/api/drivers/${driver._id}/approve`, {
+      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +131,7 @@ export default function DriversAuthorization() {
   const handleReject = async () => {
     try {
       console.log("Rejecting driver with ID:", driver._id);
-      const response = await fetch(`http://10.101.99.73:5000/api/drivers/${driver._id}/reject`, {
+      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/reject`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -155,16 +158,89 @@ export default function DriversAuthorization() {
       console.error("Reject error:", error);
       Alert.alert("Error", "Network error occurred");
     }
-  };
+    const handleApprove = async () => {
+  try {
+    console.log("Approving driver with ID:", driver._id);
+    const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/approve`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      Alert.alert(
+        "Success", 
+        "Driver has been approved",
+        [
+          { 
+            text: "OK", 
+            onPress: () => {
+              // Yahan ViewRegisteredDriver par navigate karein
+              navigation.navigate("ViewRegisteredDriver", { fromApproval: true });
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Error", data.message || "Failed to approve driver");
+    }
+  } catch (error) {
+    console.error("Approve error:", error);
+    Alert.alert("Error", "Network error occurred");
+  }
+};
 
-  // Function to get image URI
+const handleReject = async () => {
+  try {
+    console.log("Rejecting driver with ID:", driver._id);
+    const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/reject`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok && data.success) {
+      Alert.alert(
+        "Success", 
+        "Driver has been rejected",
+        [
+          { 
+            text: "OK", 
+            onPress: () => {
+              // Yahan bhi ViewRegisteredDriver par navigate karein
+              navigation.navigate("ViewRegisteredDriver", { fromApproval: true });
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert("Error", data.message || "Failed to reject driver");
+    }
+  } catch (error) {
+    console.error("Reject error:", error);
+    Alert.alert("Error", "Network error occurred");
+  }
+};
+  };
+  
+
   const getImageUri = (imageName) => {
     if (!imageName) return null;
-    return { uri: `http://10.101.99.73:5000/uploads/drivers/${imageName}` };
+    return { uri: `http://10.133.138.73:5000/uploads/drivers/${imageName}` };
   };
 
-  // Default avatar
   const defaultAvatar = require('../../assets/images/Profileimage.png');
+
+  const handleImagePress = (imageSource) => {
+    setSelectedImage(imageSource);
+    setModalVisible(true);
+  };
 
   const renderDriverItem = ({ item }) => (
     <TouchableOpacity 
@@ -225,7 +301,7 @@ export default function DriversAuthorization() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}>
           <View style={styles.infoCard}>
-            {/* Driver Info */}
+
             <Text style={styles.labelRow}>
               <Text style={styles.labelTitle}>Name: </Text>
               {driver.name || driver.fullName}
@@ -254,76 +330,92 @@ export default function DriversAuthorization() {
               </Text>
             </Text>
 
-            {/* Image Grid */}
             <View style={styles.grid}>
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>Personal</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.personalImage) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.personalImage) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>Vehicle</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.vehicleImage) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.vehicleImage) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>CNIC Front</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.cnicFront) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.cnicFront) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>CNIC Back</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.cnicBack) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.cnicBack) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>License Front</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.licenseFront) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.licenseFront) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.gridCol}>
                 <Text style={styles.gridLabel}>License Back</Text>
-                <View style={styles.imageBox}>
+                <TouchableOpacity 
+                  style={styles.imageBox}
+                  onPress={() => handleImagePress(getImageUri(driver.licenseBack) || defaultAvatar)}
+                >
                   <Image 
                     source={getImageUri(driver.licenseBack) || defaultAvatar} 
                     style={styles.image} 
                     resizeMode="cover" 
                   />
-                </View>
+                </TouchableOpacity>
               </View>
             </View>
 
-            {/* Approve / Reject Buttons */}
             <View style={styles.actionsRow}>
               <TouchableOpacity
                 style={[styles.actionBtn, styles.approveBtn]}
@@ -338,7 +430,6 @@ export default function DriversAuthorization() {
               </TouchableOpacity>
             </View>
 
-            {/* Back to List Button (only when admin is viewing) */}
             {!driverId && (
               <TouchableOpacity 
                 style={styles.backButton} 
@@ -354,6 +445,30 @@ export default function DriversAuthorization() {
           </View>
         </ScrollView>
       )}
+
+      {/* Image Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+            <Image 
+              source={selectedImage} 
+              style={styles.modalImage} 
+              resizeMode="contain" 
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -427,4 +542,41 @@ const styles = StyleSheet.create({
   retryButton: { backgroundColor: '#3498db', padding: 15, borderRadius: 5, alignItems: 'center', marginTop: 20 },
   retryButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
   debugText: { textAlign: 'center', marginTop: 10, color: '#666', fontSize: 14, fontStyle: 'italic' },
+  
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: width * 0.9,
+    height: height * 0.7,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  modalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });

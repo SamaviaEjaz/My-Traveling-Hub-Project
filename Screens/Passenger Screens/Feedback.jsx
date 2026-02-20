@@ -12,13 +12,13 @@ const Feedback = () => {
   const [rating, setRating] = useState(0);
   const handleSubmit = async () => {
     try {
-      await axios.post("http://10.101.99.73:5000/api/reviews", {
-        driverName: "Muhammad Moosa", // yaha wo driver jisko review dena hai
+      await axios.post("http://10.26.42.73:5000/api/reviews", {
+        driverName: "Muhammad Moosa", 
         rating,
         comment,
       });
       alert("Review submitted!");
-      navigation.navigate("DriverReviews"); // review page pe redirect
+      navigation.navigate("DriverReviews"); 
     } catch (error) {
       console.error(error);
       alert("Error submitting review");

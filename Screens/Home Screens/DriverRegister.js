@@ -28,13 +28,11 @@ const DriverRegister = () => {
 
   const [errors, setErrors] = useState({});
 
-  // Validators
   const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = password => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
   const isValidPhone = phone => /^03[0-9]{9}$/.test(phone);
   const isValidCnic = cnic => /^[0-9]{13}$/.test(cnic);
 
-  // Pick image from camera only
   const pickImage = async (imageType) => {
     const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
     if (cameraStatus !== 'granted') {
@@ -51,7 +49,6 @@ const DriverRegister = () => {
     }
   };
 
-  // Register driver
   const handleRegister = async () => {
     setErrors({});
     setLoading(true);
@@ -96,7 +93,7 @@ const DriverRegister = () => {
       });
 
       console.log("Submitting registration data...");
-      const response = await fetch("http://10.101.99.73:5000/api/drivers/register-with-images", {
+      const response = await fetch("http://10.133.138.73:5000/api/drivers/register-with-images", {
         method: "POST",
         body: formData,
         headers: { 'Accept': 'application/json' }
@@ -104,45 +101,100 @@ const DriverRegister = () => {
 
       console.log("Response status:", response.status);
 
-      // Check if response is ok before parsing JSON
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Backend error:", errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
       console.log("Full registration response:", JSON.stringify(data, null, 2));
 
-      if (data.success) {
-        Alert.alert(
-          "✅ Registration Successful", 
-          "Your account has been submitted for approval. You will be notified once your account is approved.",
-          [
-            { 
-              text: "OK", 
-              onPress: () => {
-                // Reset form after user acknowledges
-                setFullName(''); 
-                setEmail(''); 
-                setPassword(''); 
-                setConfirmPassword('');
-                setPhone(''); 
-                setCnic('');
-                setImages({ 
-                  personalImage: null, 
-                  cnicFront: null, 
-                  cnicBack: null, 
-                  vehicleImage: null, 
-                  licenseFront: null, 
-                  licenseBack: null 
-                });
+      // Now send OTP
+      try {
+        console.log("Sending OTP to:", phone);
+        const otpResponse = await fetch("http://10.133.138.73:5000/api/drivers/send-otp", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ phone: phone })
+        });
+
+        console.log("OTP Response status:", otpResponse.status);
+        const otpData = await otpResponse.json();
+        console.log("OTP Response data:", otpData);
+
+        // Show the OTP for development
+        if (otpData.otp) {
+          Alert.alert(
+            "Registration Successful",
+            `OTP has been sent to ${phone}. For development: ${otpData.otp}`,
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.navigate('Driver_OTP', {
+                    phone: phone,
+                    driverId: data.driverId
+                  });
+                }
               }
-            }
-          ]
-        );
-      } else {
-        Alert.alert("❌ Registration Failed", data.msg || "Registration failed");
+            ]
+          );
+        } else {
+          Alert.alert(
+            "Registration Successful",
+            "OTP has been sent to your phone number.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.navigate('Driver_OTP', {
+                    phone: phone,
+                    driverId: data.driverId
+                  });
+                }
+              }
+            ]
+          );
+        }
+      } catch (otpError) {
+        console.error("Error sending OTP:", otpError);
+        if (otpError.otp) {
+          Alert.alert(
+            "Registration Successful",
+            `Your registration was successful. For development, please use this OTP: ${otpError.otp}`,
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.navigate('Driver_OTP', {
+                    phone: phone,
+                    driverId: data.driverId
+                  });
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert(
+            "Registration Successful",
+            "Your registration was successful but we couldn't send OTP. Please try requesting OTP on the next screen.",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  navigation.navigate('Driver_OTP', {
+                    phone: phone,
+                    driverId: data.driverId
+                  });
+                }
+              }
+            ]
+          );
+        }
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -199,11 +251,24 @@ const DriverRegister = () => {
       </View>
       {errors.confirmpassword && <Text style={styles.error}>{errors.confirmpassword}</Text>}
 
-
-      <TextInput style={styles.input} placeholder="Phone" value={phone} onChangeText={setPhone} keyboardType="numeric" />
+      <TextInput 
+        style={styles.input} 
+        placeholder="Phone (03xxxxxxxxx)" 
+        value={phone} 
+        onChangeText={setPhone} 
+        keyboardType="numeric" 
+        maxLength={11}
+      />
       {errors.phone && <Text style={styles.error}>{errors.phone}</Text>}
 
-      <TextInput style={styles.input} placeholder="CNIC (13 digits)" value={cnic} onChangeText={setCnic} keyboardType="numeric" />
+      <TextInput 
+        style={styles.input} 
+        placeholder="CNIC (13 digits)" 
+        value={cnic} 
+        onChangeText={setCnic} 
+        keyboardType="numeric" 
+        maxLength={13}
+      />
       {errors.cnic && <Text style={styles.error}>{errors.cnic}</Text>}
 
       <Text style={styles.sectionTitle}>Upload Required Documents</Text>

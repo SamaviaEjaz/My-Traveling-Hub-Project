@@ -31,7 +31,7 @@ const Profile = () => {
       }
       
       if (token) {
-        const response = await fetch('http://10.101.99.73:5000/api/admin/profile', {
+        const response = await fetch('http://10.107.2.73:5000/api/admin/profile', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -41,7 +41,6 @@ const Profile = () => {
         
         if (response.ok && data.success) {
           setAdminData(data.admin);
-          // Update the stored admin data
           await AsyncStorage.setItem('adminData', JSON.stringify(data.admin));
         } else {
           Alert.alert('Error', data.message || 'Failed to fetch admin data');

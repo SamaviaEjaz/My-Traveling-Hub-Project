@@ -23,7 +23,7 @@ const ViewRegisteredDriver = ({ route }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://10.101.99.73:5000/api/drivers');
+      const response = await fetch('http://10.133.138.73:5000/api/drivers');
       const data = await response.json();
       
       if (data.success) {
@@ -40,7 +40,7 @@ const ViewRegisteredDriver = ({ route }) => {
   };
 
   const handleApprove = (driverId) => {
-    // Navigate to DriversAuthorization with driverId
+
     navigation.navigate("DriversAuthorization", { driverId });
   };
 
@@ -58,7 +58,7 @@ const ViewRegisteredDriver = ({ route }) => {
           style: "destructive",
           onPress: async () => {
             try {
-              const response = await fetch(`http://10.101.99.73:5000/api/drivers/${driverId}`, {
+              const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driverId}`, {
                 method: 'DELETE',
               });
               

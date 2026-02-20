@@ -1,26 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from 'react-native';
+import { DriverContext } from './DriverContext';
 
 const ViewSharedPost = () => {
+  const { driverName } = useContext(DriverContext);
   const [rides, setRides] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchRides = () => {
-    fetch("http://10.101.99.73:5000/api/rides")
+    setRefreshing(true);
+    fetch("http://10.133.138.73:5000/api/rides")
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          setRides(data.rides);  
+          const driverRides = data.rides.filter(ride => ride.driverName === driverName);
+          setRides(driverRides);  
         }
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error(err))
+      .finally(() => setRefreshing(false));
   };
 
   useEffect(() => {
+    // Reset rides when driver changes
+    setRides([]);
     fetchRides();
-  }, []);
+  }, [driverName]);
 
   const handleDelete = (id) => {
-    fetch(`http://10.101.99.73:5000/api/rides/${id}`, {
+    fetch(`http://10.133.138.73:5000/api/rides/${id}`, {
       method: "DELETE",
     })
       .then(res => res.json())
@@ -62,17 +70,35 @@ const ViewSharedPost = () => {
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={rides}
-        keyExtractor={(item) => item._id} 
-        renderItem={renderRide}
-      />
+      {rides.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>You haven't shared any rides yet.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={rides}
+          keyExtractor={(item) => item._id} 
+          renderItem={renderRide}
+          refreshing={refreshing}
+          onRefresh={fetchRides}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    textAlign: 'center',
+  },
   card: {
     backgroundColor: '#eee9e7ff',
     padding: 15,

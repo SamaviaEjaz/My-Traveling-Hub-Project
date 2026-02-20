@@ -1,10 +1,14 @@
+// LoginPage.js
 import { useNavigation } from '@react-navigation/native';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DriverContext } from '../Driver Screens/DriverContext';
 
 const LoginPage = () => {
   const navigation = useNavigation();
+  const { saveDriverData, clearAllUserData, createUserSession } = useContext(DriverContext); // Fixed: Using createUserSession
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,11 +22,26 @@ const LoginPage = () => {
   const isValidPassword = (password) =>
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{8,}$/.test(password);
 
+  const checkDriverStatus = async (driverEmail) => {
+    try {
+      const response = await fetch(`http://10.133.138.73:5000/api/drivers?email=${driverEmail}`);
+      const data = await response.json();
+      
+      if (response.ok && data.success && data.drivers && data.drivers.length > 0) {
+        return data.drivers[0].status;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error checking driver status:", error);
+      return null;
+    }
+  };
+
   const handleLogin = async () => {
     let valid = true;
 
     if (!fullName) {
-      alert('Full Name is required');
+      Alert.alert('Validation Error', 'Full Name is required');
       valid = false;
     }
 
@@ -51,7 +70,21 @@ const LoginPage = () => {
     if (!valid) return;
 
     try {
-      const response = await fetch('http://10.101.99.73:5000/api/drivers/login', {
+      await clearAllUserData();
+      
+      const driverStatus = await checkDriverStatus(email);
+      
+      if (driverStatus && driverStatus !== 'approved') {
+        Alert.alert(
+          'Account Pending Approval', 
+          'Your account is pending approval. Please wait for admin approval before logging in.',
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Proceed with login
+      const response = await fetch('http://10.133.138.73:5000/api/drivers/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -61,18 +94,32 @@ const LoginPage = () => {
       console.log('Server response:', data);
 
       if (response.ok && data.success) {
-        // ✅ Driver ka naam SharePost ko bhejna
-        navigation.navigate('Driver_Dashboard', { driverName: fullName });
+        // Save driver data using context
+        await saveDriverData(data.driver);
+        
+        // Create a new session for this user
+        const sessionId = await createUserSession(data.driver.name); // Fixed: Using createUserSession
+        
+        // Final status check after login
+        if (data.driver && data.driver.status === 'approved') {
+          // Navigate to dashboard with driver name as parameter
+          navigation.navigate('Driver_Dashboard', { 
+            driverName: data.driver.name,
+            newSession: true 
+          });
+        } else {
+          Alert.alert(
+            'Account Pending Approval', 
+            'Your account is pending approval. Please wait for admin approval before logging in.',
+            [{ text: 'OK' }]
+          );
+        }
       } else {
-        alert(data.message || 'Login failed');
+        Alert.alert('Login Failed', data.message || 'Invalid credentials');
       }
     } catch (error) {
-      alert('Error connecting to server: ' + error.message);
+      Alert.alert('Error', 'Error connecting to server: ' + error.message);
     }
-
-    setFullName('');
-    setEmail('');
-    setPassword('');
   };
 
   return (
@@ -120,6 +167,13 @@ const LoginPage = () => {
         </TouchableOpacity>
       </View>
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
+
+       <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Forget')}>
+          <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttontext}>Submit</Text>

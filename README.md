@@ -11,7 +11,7 @@ A React Native project for travel booking and ride-sharing.
 
 ##
 Admin Login 
-- DriverApproval 
+- DriverApproval
 - Delete Driver 
 - ViewComplaints
 

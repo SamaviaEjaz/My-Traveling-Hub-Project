@@ -22,6 +22,7 @@ const UpdateProfile = () => {
   const handleRegister = async () => {
     let valid = true;
 
+    
     if (!email) {
       setEmailError('Email is required');
       valid = false;
@@ -42,7 +43,7 @@ const UpdateProfile = () => {
     if (!valid) return;
 
     try {
-      const response = await fetch("http://YOUR-IP:5000/api/users/update", {
+      const response = await fetch("http://10.107.2.73:5000/api/users/update", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

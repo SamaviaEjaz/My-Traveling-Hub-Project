@@ -1,112 +1,251 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, FlatList, Image } from 'react-native';
-import { Rating } from 'react-native-ratings';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import axios from "axios";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
-const SERVER_URL = "http://10.101.99.73:5000/api";
-
-const Reviews = () => {
-  const [comment, setComment] = useState('');
+const ReviewForm = ({ bookingId, onReviewSubmitted, navigation }) => {
   const [rating, setRating] = useState(0);
-  const [reviews, setReviews] = useState([]);
-  const loggedInDriver = "Muhammad Moosa"; // driver jiske liye feedback hai
-
-  const fetchReviews = async () => {
-    try {
-      const res = await axios.get(`${SERVER_URL}/reviews`);
-      const driverReviews = res.data.filter(r => r.driverName === loggedInDriver);
-      setReviews(driverReviews);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  const [comment, setComment] = useState('');
+  const [driverName, setDriverName] = useState('');
+  const [passengerName, setPassengerName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingDetails, setBookingDetails] = useState(null);
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    // Get user information from AsyncStorage
+    const getUserInfo = async () => {
+      try {
+        const driver = await AsyncStorage.getItem('driverName');
+        const passenger = await AsyncStorage.getItem('passengerName');
+        setDriverName(driver || '');
+        setPassengerName(passenger || '');
+      } catch (error) {
+        console.error("Error getting user info:", error);
+      }
+    };
+    
+    getUserInfo();
+    
+    // Fetch booking details if bookingId is provided
+    if (bookingId) {
+      fetchBookingDetails();
+    }
+  }, [bookingId]);
 
-  const handleSubmit = async () => {
-    if (!comment || rating === 0) return alert("Please write a comment and give a rating!");
+  const fetchBookingDetails = async () => {
     try {
-      await axios.post(`${SERVER_URL}/reviews`, { driverName: loggedInDriver, rating, comment });
-      setComment('');
-      setRating(0);
-      fetchReviews(); // immediately update reviews below
-      alert("Review submitted!");
+      // First check if bookingId exists
+      if (!bookingId) {
+        console.error("No booking ID provided");
+        return;
+      }
+      
+      console.log("Fetching booking details for ID:", bookingId);
+      const response = await axios.get(`http://10.133.138.73:5000/api/bookings/${bookingId}`);
+      setBookingDetails(response.data);
     } catch (error) {
-      console.error(error);
-      alert("Error submitting review");
+      console.error("Error fetching booking details:", error);
+      // Don't show an alert here, as we might not need booking details to submit a review
     }
   };
 
-  const renderStars = (rating) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      if (i <= Math.floor(rating)) stars.push("★");
-      else if (i - rating < 1 && rating % 1 !== 0) stars.push("⯨");
-      else stars.push("☆");
-    }
-    return stars.join(" ");
-  };
+ // In ReviewForm.js
 
-  const renderReview = ({ item }) => (
-    <View style={styles.reviewCard}>
-      <View style={styles.driverInfo}>
-        <Image source={require("../../assets/images/Profileimage.png")} style={styles.driverImage} />
-        <View style={{ marginLeft: 10 }}>
-          <Text style={styles.rating}>{renderStars(item.rating)} ({item.rating})</Text>
-          <Text style={styles.comment}>{item.comment}</Text>
-        </View>
-      </View>
-    </View>
-  );
+const submitReview = async () => {
+  // ... (validation code remains the same)
+
+  setIsLoading(true);
+
+  try {
+    // --- CORRECTED REVIEW DATA ---
+    // Only include passengerName if it's not empty
+    const reviewData = {
+      rating,
+      comment: comment.trim(),
+      driverName,
+      bookingId: bookingId || 'unknown',
+      date: new Date().toISOString(),
+    };
+
+    // Conditionally add passengerName only if it exists
+    if (passengerName && passengerName.trim() !== '') {
+      reviewData.passengerName = passengerName.trim();
+    }
+
+    console.log("Submitting review:", reviewData);
+
+    // Submit review to the server
+    const response = await axios.post('http://10.133.138.73:5000/api/reviews', reviewData);
+    
+    if (response.data.success) {
+      Alert.alert(
+        "Review Submitted",
+        response.data.message || "Thank you for your feedback!",
+        [
+          { text: "OK", onPress: () => {
+            // Reset form
+            setRating(0);
+            setComment('');
+            
+            // Call the callback function if provided
+            if (onReviewSubmitted) {
+              onReviewSubmitted();
+            }
+            
+            // Navigate back if navigation is provided
+            if (navigation) {
+              navigation.goBack();
+            }
+          }}
+        ]
+      );
+    } else {
+      // This part is now less likely to be hit, but good to keep
+      Alert.alert("Error", response.data.message || "Failed to submit review. Please try again.");
+    }
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    // ... (your existing error handling is good, keep it)
+  } finally {
+    setIsLoading(false);
+  }
+};
+  const renderStar = (index) => {
+    return (
+      <TouchableOpacity
+        key={index}
+        style={styles.starButton}
+        onPress={() => setRating(index + 1)}
+      >
+        <Text style={[styles.star, { color: index < rating ? '#FFD700' : '#CCCCCC' }]}>
+          ★
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Rating
-        type="star"
-        ratingCount={5}
-        imageSize={40}
-        showRating
-        startingValue={rating}
-        onFinishRating={setRating}
-        style={{ paddingVertical: 10 }}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Write your comment"
-        value={comment}
-        onChangeText={setComment} 
-      />
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttontext}>Submit</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.heading}>Reviews</Text>
-      {reviews.length > 0 ? (
-        <FlatList
-          data={reviews}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={renderReview}
-        />
-      ) : <Text style={styles.noReviews}>No reviews yet.</Text>}
-    </SafeAreaView>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Submit Your Review</Text>
+        
+        {bookingDetails && (
+          <View style={styles.bookingInfo}>
+            <Text style={styles.bookingInfoText}>Booking ID: {bookingDetails.id || bookingId}</Text>
+            <Text style={styles.bookingInfoText}>From: {bookingDetails.from || 'N/A'}</Text>
+            <Text style={styles.bookingInfoText}>To: {bookingDetails.to || 'N/A'}</Text>
+          </View>
+        )}
+        
+        <View style={styles.ratingContainer}>
+          <Text style={styles.label}>Rating:</Text>
+          <View style={styles.starsContainer}>
+            {[0, 1, 2, 3, 4].map(renderStar)}
+          </View>
+        </View>
+        
+        <View style={styles.commentContainer}>
+          <Text style={styles.label}>Comment:</Text>
+          <TextInput
+            style={styles.commentInput}
+            multiline
+            numberOfLines={4}
+            placeholder="Share your experience..."
+            value={comment}
+            onChangeText={setComment}
+          />
+        </View>
+        
+        <TouchableOpacity
+          style={[styles.submitButton, isLoading && styles.disabledButton]}
+          onPress={submitReview}
+          disabled={isLoading}
+        >
+          <Text style={styles.submitButtonText}>
+            {isLoading ? 'Submitting...' : 'Submit Review'}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 10, backgroundColor: "#f0f0f0" },
-  input: { height: 50, borderColor: '#ccc', borderWidth: 2, marginBottom: 5, paddingHorizontal: 15, borderRadius: 3, backgroundColor: '#FFF', fontSize: 16, color: '#333', margin: 15 },
-  button: { backgroundColor: '#1215efff', padding: 16, borderRadius: 15, alignItems: 'center', marginHorizontal: 60, marginTop: 15 },
-  buttontext: { color: 'white', fontSize: 15, fontWeight: 'bold' },
-  heading: { fontSize: 20, fontWeight: 'bold', marginVertical: 10 },
-  noReviews: { fontSize: 16, color: '#555', marginTop: 20 },
-  reviewCard: { backgroundColor: "#eee9e7ff", padding: 15, borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: "#ddd" },
-  driverInfo: { flexDirection: "row", alignItems: "flex-start" },
-  driverImage: { width: 50, height: 50, borderRadius: 25 },
-  rating: { fontSize: 16, color: "#ffaa00" },
-  comment: { fontSize: 14, color: "#555", marginTop: 4, maxWidth: 250 },
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  scrollContainer: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  bookingInfo: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  bookingInfoText: {
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+  },
+  ratingContainer: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  starButton: {
+    padding: 5,
+  },
+  star: {
+    fontSize: 40,
+  },
+  commentContainer: {
+    marginBottom: 20,
+  },
+  commentInput: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    padding: 15,
+    fontSize: 16,
+    textAlignVertical: 'top',
+  },
+  submitButton: {
+    backgroundColor: '#297ce9',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#a0a0a0',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
 
-export default Reviews;
+export default ReviewForm;

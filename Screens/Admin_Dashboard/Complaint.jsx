@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import axios from 'axios';
 
-const SERVER_URL = "http://10.101.99.73:5000/api";
+const SERVER_URL = "http://10.133.138.73:5000/api";
 
 const AdminComplaints = () => {
   const [complaints, setComplaints] = useState([]);
