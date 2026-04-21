@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { BASE_URL } from '../../apiConfig';
 import * as ImagePicker from 'expo-image-picker';
 
 const DriverRegister = () => {
@@ -92,28 +93,22 @@ const DriverRegister = () => {
         }
       });
 
-      console.log("Submitting registration data...");
-      const response = await fetch("http://10.133.138.73:5000/api/drivers/register-with-images", {
+      const response = await fetch(`${BASE_URL}/api/drivers/register-with-images`, {
         method: "POST",
         body: formData,
         headers: { 'Accept': 'application/json' }
       });
 
-      console.log("Response status:", response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Backend error:", errorData);
         throw new Error(errorData.msg || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log("Full registration response:", JSON.stringify(data, null, 2));
 
-      // Now send OTP
       try {
-        console.log("Sending OTP to:", phone);
-        const otpResponse = await fetch("http://10.133.138.73:5000/api/drivers/send-otp", {
+        // ✅ FIXED: http:// (double slash)
+        const otpResponse = await fetch(`${BASE_URL}/api/drivers/send-otp`, {
           method: "POST",
           headers: {
             'Content-Type': 'application/json',
@@ -122,82 +117,30 @@ const DriverRegister = () => {
           body: JSON.stringify({ phone: phone })
         });
 
-        console.log("OTP Response status:", otpResponse.status);
         const otpData = await otpResponse.json();
-        console.log("OTP Response data:", otpData);
 
-        // Show the OTP for development
-        if (otpData.otp) {
+        if (otpData.success) {
           Alert.alert(
             "Registration Successful",
-            `OTP has been sent to ${phone}. For development: ${otpData.otp}`,
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  navigation.navigate('Driver_OTP', {
-                    phone: phone,
-                    driverId: data.driverId
-                  });
-                }
-              }
-            ]
+            `OTP has been sent to your phone number ${phone}. Please enter it on the next screen.`,
+            [{ text: "OK", onPress: () => navigation.navigate('Driver_OTP', { phone: phone, driverId: data.driverId }) }]
           );
         } else {
           Alert.alert(
             "Registration Successful",
-            "OTP has been sent to your phone number.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  navigation.navigate('Driver_OTP', {
-                    phone: phone,
-                    driverId: data.driverId
-                  });
-                }
-              }
-            ]
+            "Registration done but OTP could not be sent. Please try requesting OTP on the next screen.",
+            [{ text: "OK", onPress: () => navigation.navigate('Driver_OTP', { phone: phone, driverId: data.driverId }) }]
           );
         }
       } catch (otpError) {
         console.error("Error sending OTP:", otpError);
-        if (otpError.otp) {
-          Alert.alert(
-            "Registration Successful",
-            `Your registration was successful. For development, please use this OTP: ${otpError.otp}`,
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  navigation.navigate('Driver_OTP', {
-                    phone: phone,
-                    driverId: data.driverId
-                  });
-                }
-              }
-            ]
-          );
-        } else {
-          Alert.alert(
-            "Registration Successful",
-            "Your registration was successful but we couldn't send OTP. Please try requesting OTP on the next screen.",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  navigation.navigate('Driver_OTP', {
-                    phone: phone,
-                    driverId: data.driverId
-                  });
-                }
-              }
-            ]
-          );
-        }
+        Alert.alert(
+          "Registration Successful",
+          "Your registration was successful but we couldn't send OTP. Please try requesting OTP on the next screen.",
+          [{ text: "OK", onPress: () => navigation.navigate('Driver_OTP', { phone: phone, driverId: data.driverId }) }]
+        );
       }
     } catch (error) {
-      console.error("Registration error:", error);
       Alert.alert("⚠ Registration Error", error.message || "Please try again later");
     } finally {
       setLoading(false);
@@ -234,41 +177,17 @@ const DriverRegister = () => {
       {errors.password && <Text style={styles.error}>{errors.password}</Text>}
 
       <View style={styles.passwordContainer}>
-        <TextInput
-          style={styles.inputField}
-          placeholder="Confirm Password"
-          value={confirmpassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={!showConfirmPassword}
-        />
+        <TextInput style={styles.inputField} placeholder="Confirm Password" value={confirmpassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword} />
         <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-          <Ionicons
-            name={showConfirmPassword ? 'eye' : 'eye-off'}
-            size={24}
-            color="gray"
-          />
+          <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={24} color="gray" />
         </TouchableOpacity>
       </View>
       {errors.confirmpassword && <Text style={styles.error}>{errors.confirmpassword}</Text>}
 
-      <TextInput 
-        style={styles.input} 
-        placeholder="Phone (03xxxxxxxxx)" 
-        value={phone} 
-        onChangeText={setPhone} 
-        keyboardType="numeric" 
-        maxLength={11}
-      />
+      <TextInput style={styles.input} placeholder="Phone (03xxxxxxxxx)" value={phone} onChangeText={setPhone} keyboardType="numeric" maxLength={11} />
       {errors.phone && <Text style={styles.error}>{errors.phone}</Text>}
 
-      <TextInput 
-        style={styles.input} 
-        placeholder="CNIC (13 digits)" 
-        value={cnic} 
-        onChangeText={setCnic} 
-        keyboardType="numeric" 
-        maxLength={13}
-      />
+      <TextInput style={styles.input} placeholder="CNIC (13 digits)" value={cnic} onChangeText={setCnic} keyboardType="numeric" maxLength={13} />
       {errors.cnic && <Text style={styles.error}>{errors.cnic}</Text>}
 
       <Text style={styles.sectionTitle}>Upload Required Documents</Text>

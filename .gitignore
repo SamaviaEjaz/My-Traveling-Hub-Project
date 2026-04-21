@@ -35,7 +35,7 @@ yarn-error.*
 .env*.local
 
 
-android
+android/gradle/wrapper/gradle-*.zip
 
 
 # typescript

@@ -2,8 +2,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityInd
 import React, { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import { BASE_URL } from '../../apiConfig';
 
-const SERVER_URL = "http://10.107.2.73:5000/api";
+const SERVER_URL = `${BASE_URL}/api`;
 
 const PassengerGiveComplaint = () => {
   const navigation = useNavigation();

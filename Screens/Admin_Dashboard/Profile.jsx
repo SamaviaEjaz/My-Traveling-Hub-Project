@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../apiConfig';
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -31,7 +32,7 @@ const Profile = () => {
       }
       
       if (token) {
-        const response = await fetch('http://10.107.2.73:5000/api/admin/profile', {
+        const response = await fetch(`${BASE_URL}/api/admin/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { BASE_URL } from '../../apiConfig';
 
 const ViewRegisteredDriver = ({ route }) => {
   const [drivers, setDrivers] = useState([]);
@@ -23,7 +24,7 @@ const ViewRegisteredDriver = ({ route }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('http://10.133.138.73:5000/api/drivers');
+      const response = await fetch(`${BASE_URL}/api/drivers`);
       const data = await response.json();
       
       if (data.success) {
@@ -58,7 +59,7 @@ const ViewRegisteredDriver = ({ route }) => {
           style: "destructive",
           onPress: async () => {
             try {
-              const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driverId}`, {
+              const response = await fetch(`${BASE_URL}/api/drivers/${driverId}`, {
                 method: 'DELETE',
               });
               

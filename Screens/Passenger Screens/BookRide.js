@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from "react-native";
 import axios from "axios";
+import { BASE_URL } from '../../apiConfig';
 
 const BookRide = ({ navigation }) => {
   const [from, setFrom] = useState("");
@@ -13,8 +14,8 @@ const BookRide = ({ navigation }) => {
 
   const handleBooking = async () => {
     try {
-      const res = await axios.post("http://10.131.236.73:5000/api/bookings", {
-        rideId: "123abc",   // Can generate dynamically
+      const res = await axios.post(`${BASE_URL}/api/bookings`, {
+        rideId: "123abc",
         driverName,
         from,
         to,
@@ -22,6 +23,8 @@ const BookRide = ({ navigation }) => {
         time,
         vehicle,
         seats
+      }, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
       });
       if (res.data.success) {
         Alert.alert("Success", "Booking created!");

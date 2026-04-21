@@ -2,24 +2,26 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert, ActivityIndicator } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
+import { BASE_URL } from '../../apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const AdminLogin = () => {
   const navigation = useNavigation();
-  const [email, setEmail] = useState(''); 
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = (password) =>
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{8,}$/.test(password);
-  
+
   const handleLogin = async () => {
     let valid = true;
-    
+
     if (!email) {
       setEmailError('Email is required');
       valid = false;
@@ -29,28 +31,28 @@ const AdminLogin = () => {
     } else {
       setEmailError('');
     }
-    
+
     if (!password) {
       setPasswordError('Password is required');
       valid = false;
     } else {
       setPasswordError('');
     }
-    
+
     if (!valid) return;
-    
+
     setLoading(true);
-    
+
     try {
-      const response = await fetch('http://10.133.138.73:5000/api/admin/login', {
+      const response = await fetch(`${BASE_URL}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-      
+
       const text = await response.text();
       let data;
-      
+
       try {
         data = JSON.parse(text);
       } catch {
@@ -59,11 +61,11 @@ const AdminLogin = () => {
         setLoading(false);
         return;
       }
-      
+
       if (response.ok && data.success) {
         await AsyncStorage.setItem('adminToken', data.token);
         await AsyncStorage.setItem('adminData', JSON.stringify(data.admin));
-        
+
         navigation.navigate('AdminDashboard');
       } else {
         Alert.alert("Login Failed", data.message || 'Invalid credentials');
@@ -75,11 +77,11 @@ const AdminLogin = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Admin Login</Text>
-      
+
       <View style={styles.inputContainer}>
         <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
         <TextInput
@@ -92,7 +94,7 @@ const AdminLogin = () => {
         />
       </View>
       {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
-      
+
       <View style={styles.inputContainer}>
         <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
         <TextInput
@@ -111,16 +113,16 @@ const AdminLogin = () => {
         </TouchableOpacity>
       </View>
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
-      
-       <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
+
+      <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
         <TouchableOpacity
           onPress={() => navigation.navigate('Forget')}>
           <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
         </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.disabledButton]} 
+
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
         onPress={handleLogin}
         disabled={loading}
       >

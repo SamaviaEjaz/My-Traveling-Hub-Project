@@ -5,6 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DriverContext } from './DriverContext';
 import MapView, { Marker, Polyline } from 'react-native-maps';
+import { BASE_URL } from '../../apiConfig';
 
 const CITY_COORDINATES = {
   'karachi': { latitude: 24.8607, longitude: 67.0011, name: 'Karachi' },
@@ -147,7 +148,7 @@ const SharePost = ({ navigation }) => {
 
     try {
       setIsLoading(true);
-      const backendUrl = "http://10.133.138.73:5000/api/rides";
+      const backendUrl =`${BASE_URL}/api/rides`;
 
       const checkRes = await fetch(backendUrl);
       const checkData = await checkRes.json();

@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { Entypo } from '@expo/vector-icons';
+import { BASE_URL } from '../../apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PassengerLogin = () => {
@@ -24,7 +25,6 @@ const PassengerLogin = () => {
       Alert.alert('Validation Error', 'Full Name is required');
       valid = false;
     }
-
     if (!email) {
       setEmailError('Email is required');
       valid = false;
@@ -34,14 +34,11 @@ const PassengerLogin = () => {
     } else {
       setEmailError('');
     }
-
     if (!password) {
       setPasswordError('Password is required');
       valid = false;
     } else if (!isValidPassword(password)) {
-      setPasswordError(
-        'Password must be at least 8 characters, include uppercase, lowercase, number, and special character'
-      );
+      setPasswordError('Password must be at least 8 characters, include uppercase, lowercase, number, and special character');
       valid = false;
     } else {
       setPasswordError('');
@@ -50,9 +47,12 @@ const PassengerLogin = () => {
     if (!valid) return;
 
     try {
-      const response = await fetch('http://10.133.138.73:5000/api/passengers/login', {
+      const response = await fetch(`${BASE_URL}/api/passengers/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -60,11 +60,16 @@ const PassengerLogin = () => {
       console.log('Server response:', data);
 
       if (response.ok && data.success) {
+        // ✅ passengerData save karo
         await AsyncStorage.setItem('passengerData', JSON.stringify({
           fullName: fullName,
           email: email,
-          phone: data.phone || ''
+          phone: data.passenger?.phone || ''
         }));
+
+        // ✅ Alag alag bhi save karo
+        await AsyncStorage.setItem('passengerName', fullName);
+        await AsyncStorage.setItem('passengerPhone', data.passenger?.phone || '');
 
         if (data.token) {
           await AsyncStorage.setItem('passengerToken', data.token);
@@ -127,8 +132,7 @@ const PassengerLogin = () => {
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
       <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Forget')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Forget')}>
           <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
         </TouchableOpacity>
       </View>
@@ -143,69 +147,20 @@ const PassengerLogin = () => {
           <Text style={{ color: '#0d09fca3', fontWeight: 'bold' }}>Register</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    backgroundColor: '#f0f0f0',
-    flex: 1,
-    paddingBottom: 90,
-  },
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#ccc',
-    borderWidth: 2,
-    borderRadius: 3,
-    margin: 7,
-    backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-  },
-  icon: {
-    width: 30,
-    height: 30,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#6d6fc2ff',
-    padding: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginHorizontal: 60,
-    marginTop: 15,
-  },
-  buttontext: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  error: {
-    color: 'red',
-    marginLeft: 20,
-    marginBottom: 5,
-  },
-  eyeIcon: {
-    padding: 5,
-  },
+  container: { justifyContent: 'center', paddingHorizontal: 10, backgroundColor: '#f0f0f0', flex: 1, paddingBottom: 90 },
+  heading: { fontSize: 26, fontWeight: 'bold', color: '#333', textAlign: 'center', marginTop: 40, marginBottom: 20 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderColor: '#ccc', borderWidth: 2, borderRadius: 3, margin: 7, backgroundColor: '#FFF', paddingHorizontal: 10 },
+  icon: { width: 30, height: 30, marginRight: 8 },
+  input: { flex: 1, height: 50, fontSize: 16, color: '#333' },
+  button: { backgroundColor: '#6d6fc2ff', padding: 16, borderRadius: 15, alignItems: 'center', marginHorizontal: 60, marginTop: 15 },
+  buttontext: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+  error: { color: 'red', marginLeft: 20, marginBottom: 5 },
+  eyeIcon: { padding: 5 },
 });
 
 export default PassengerLogin;

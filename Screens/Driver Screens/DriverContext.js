@@ -1,6 +1,7 @@
 // DriverContext.js
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../apiConfig';
 
 export const DriverContext = createContext();
 
@@ -10,11 +11,10 @@ export const DriverProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userSession, setUserSession] = useState(null);
 
-  // Normalize driver name
+  // ✅ Sirf trim karo — lowercase nahi
   const normalizeName = (name) =>
-    typeof name === 'string' ? name.trim().toLowerCase() : null;
+    typeof name === 'string' ? name.trim() : null;
 
-  // Load driver data once on mount
   useEffect(() => {
     loadDriverData();
   }, []);
@@ -31,15 +31,12 @@ export const DriverProvider = ({ children }) => {
         const parsedData = JSON.parse(dataString);
         if (parsedData) {
           setDriverData(parsedData);
-          if (parsedData.name) {
-            setDriverName(normalizeName(parsedData.name));
-          }
+          if (parsedData.name) setDriverName(normalizeName(parsedData.name));
         }
       } else if (nameString) {
         setDriverName(normalizeName(nameString));
       }
 
-      // Only one log to indicate loading done
       console.log("DriverContext: Driver data loaded");
     } catch (error) {
       console.error("DriverContext: Error loading driver data:", error);
@@ -53,8 +50,7 @@ export const DriverProvider = ({ children }) => {
       await AsyncStorage.setItem('driverData', JSON.stringify(data));
       setDriverData(data);
       if (data.name) setDriverName(normalizeName(data.name));
-
-      console.log("DriverContext: Driver data saved");
+      console.log("DriverContext: Driver name saved");
       return true;
     } catch (error) {
       console.error("DriverContext: Error saving driver data:", error);
@@ -88,11 +84,9 @@ export const DriverProvider = ({ children }) => {
     }
   }, []);
 
-  // New function to save profile data with user-specific key
   const saveProfileData = useCallback(async (profileData) => {
     try {
       if (!driverName) return false;
-      
       await AsyncStorage.setItem(`driverProfile_${driverName}`, JSON.stringify(profileData));
       console.log("DriverContext: Profile data saved for", driverName);
       return true;
@@ -102,18 +96,12 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName]);
 
-  // New function to load profile data with user-specific key
   const loadProfileData = useCallback(async (name = null) => {
     try {
       const targetName = name || driverName;
       if (!targetName) return null;
-      
       const data = await AsyncStorage.getItem(`driverProfile_${targetName}`);
-      if (data) {
-        const profileData = JSON.parse(data);
-        console.log("DriverContext: Profile data loaded for", targetName);
-        return profileData;
-      }
+      if (data) return JSON.parse(data);
       return null;
     } catch (error) {
       console.error("DriverContext: Error loading profile data:", error);
@@ -121,14 +109,11 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName]);
 
-  // New function to save profile photo with user-specific key
   const saveProfilePhoto = useCallback(async (photoUri, name = null) => {
     try {
       const targetName = name || driverName;
       if (!targetName) return false;
-      
       await AsyncStorage.setItem(`profilePhoto_${targetName}`, photoUri);
-      console.log("DriverContext: Profile photo saved for", targetName);
       return true;
     } catch (error) {
       console.error("DriverContext: Error saving profile photo:", error);
@@ -136,45 +121,38 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName]);
 
-  // New function to load profile photo with user-specific key
   const loadProfilePhoto = useCallback(async (name = null) => {
     try {
       const targetName = name || driverName;
       if (!targetName) return null;
-      
       const photoUri = await AsyncStorage.getItem(`profilePhoto_${targetName}`);
-      if (photoUri) {
-        console.log("DriverContext: Profile photo loaded for", targetName);
-        return photoUri;
-      }
-      return null;
+      return photoUri || null;
     } catch (error) {
       console.error("DriverContext: Error loading profile photo:", error);
       return null;
     }
   }, [driverName]);
 
-  // New function to fetch driver profile from server
+  // ✅ BASE_URL + ngrok header
   const fetchDriverProfile = useCallback(async (name = null) => {
     try {
       const targetName = name || driverName;
       if (!targetName) return null;
-      
-      const response = await fetch(`http://10.89.188.73:5000/api/drivers?name=${encodeURIComponent(targetName)}`);
+
+      const response = await fetch(`${BASE_URL}/api/drivers?name=${encodeURIComponent(targetName)}`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+      });
       const result = await response.json();
-      
+
       if (response.ok && result.success && result.drivers && result.drivers.length > 0) {
-        const driverData = result.drivers[0];
+        const driver = result.drivers[0];
         const profileData = {
-          fullName: driverData.name || targetName,
-          email: driverData.email || 'Not provided',
-          phone: driverData.phone || 'Not provided',
+          fullName: driver.name || targetName,
+          email: driver.email || 'Not provided',
+          phone: driver.phone || 'Not provided',
         };
-        
-        // Save the profile data for future use
         await saveProfileData(profileData);
-        
-        console.log("DriverContext: Driver profile fetched from server for", targetName);
+        console.log("DriverContext: Driver profile fetched for", targetName);
         return profileData;
       }
       return null;
@@ -184,6 +162,7 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName, saveProfileData]);
 
+  // ✅ driverProfile_ keys delete nahi hogi logout pe
   const clearAllUserData = useCallback(async () => {
     try {
       await AsyncStorage.multiRemove(['driverData', 'driverName', 'userSession']);
@@ -224,12 +203,11 @@ export const DriverProvider = ({ children }) => {
         createUserSession,
         clearAllUserData,
         loadDriverData,
-        // New functions
         saveProfileData,
         loadProfileData,
         saveProfilePhoto,
         loadProfilePhoto,
-        fetchDriverProfile
+        fetchDriverProfile,
       }}
     >
       {children}

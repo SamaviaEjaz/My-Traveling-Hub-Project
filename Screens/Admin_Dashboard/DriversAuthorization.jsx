@@ -13,6 +13,7 @@ import {
   Modal,
 } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { BASE_URL } from '../../apiConfig';
 
 const { width, height } = Dimensions.get('window');
 const ITEM_SIZE = (width - 48) / 2; 
@@ -45,7 +46,7 @@ export default function DriversAuthorization() {
   const fetchDriver = async (id) => {
     try {
       console.log("Fetching driver with ID:", id);
-      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${id}`);
+      const response = await fetch(`${BASE_URL}/api/drivers/${id}`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -72,7 +73,7 @@ export default function DriversAuthorization() {
   const fetchPendingDrivers = async () => {
     try {
       console.log("Fetching pending drivers");
-      const response = await fetch(`http://10.133.138.73:5000/api/drivers?status=pending`);
+      const response = await fetch(`${BASE_URL}/api/drivers?status=pending`);
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -99,7 +100,7 @@ export default function DriversAuthorization() {
   const handleApprove = async () => {
     try {
       console.log("Approving driver with ID:", driver._id);
-      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/approve`, {
+      const response = await fetch(`${BASE_URL}/api/drivers/${driver._id}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -131,7 +132,7 @@ export default function DriversAuthorization() {
   const handleReject = async () => {
     try {
       console.log("Rejecting driver with ID:", driver._id);
-      const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/reject`, {
+      const response = await fetch(`${BASE_URL}/api/drivers/${driver._id}/reject`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +162,7 @@ export default function DriversAuthorization() {
     const handleApprove = async () => {
   try {
     console.log("Approving driver with ID:", driver._id);
-    const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/approve`, {
+    const response = await fetch(`${BASE_URL}/api/drivers/${driver._id}/approve`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -196,7 +197,7 @@ export default function DriversAuthorization() {
 const handleReject = async () => {
   try {
     console.log("Rejecting driver with ID:", driver._id);
-    const response = await fetch(`http://10.133.138.73:5000/api/drivers/${driver._id}/reject`, {
+    const response = await fetch(`${BASE_URL}/api/drivers/${driver._id}/reject`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -232,7 +233,7 @@ const handleReject = async () => {
 
   const getImageUri = (imageName) => {
     if (!imageName) return null;
-    return { uri: `http://10.133.138.73:5000/uploads/drivers/${imageName}` };
+    return { uri: `${BASE_URL}/uploads/drivers/${imageName}` };
   };
 
   const defaultAvatar = require('../../assets/images/Profileimage.png');

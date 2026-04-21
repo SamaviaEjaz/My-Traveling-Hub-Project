@@ -5,68 +5,56 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DriverContext } from './DriverContext';
+import { BASE_URL } from '../../apiConfig';
 
 const Profile = () => {
   const navigation = useNavigation();
   const { driverName, clearAllUserData } = useContext(DriverContext);
 
   const [image, setImage] = useState(require('../../assets/images/ProfilePhoto.png'));
-  const [profile, setProfile] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
-  });
+  const [profile, setProfile] = useState({ fullName: '', email: '', phone: '' });
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
+  const [driverId, setDriverId] = useState(null);
 
-  // Load profile data whenever screen comes back in focus
   useFocusEffect(
     React.useCallback(() => {
-      if (driverName) {
-        loadProfileData();
-      }
+      if (driverName) loadProfileData();
     }, [driverName])
   );
 
   const loadProfileData = async () => {
     try {
-      if (initialLoad) {
-        setLoading(true);
-      }
-      
+      if (initialLoad) setLoading(true);
       console.log('Loading profile for driver:', driverName);
-      
-      // Use user-specific key for profile data
-      const data = await AsyncStorage.getItem(`driverProfile_${driverName}`);
-      console.log('Profile data from AsyncStorage:', data);
-      
-      if (data) {
-        setProfile(JSON.parse(data));
+
+      const cachedData = await AsyncStorage.getItem(`driverProfile_${driverName}`);
+
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        setProfile(parsed);
+        // ✅ Cache se bhi id lo agar ho
+        if (parsed._id) setDriverId(parsed._id);
         setLoading(false);
+        setInitialLoad(false);
       } else {
-        // If no specific profile data, try to get from server
         try {
-          console.log('Fetching profile from server for:', driverName);
-          const response = await fetch(`http://10.133.138.73:5000/api/drivers?name=${driverName}`);
+          const response = await fetch(`${BASE_URL}/api/drivers?name=${driverName}`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' },
+          });
           const result = await response.json();
-          
-          console.log('Server response:', result);
-          
+
           if (response.ok && result.success && result.drivers && result.drivers.length > 0) {
             const driverData = result.drivers[0];
             const newProfile = {
+              _id: driverData._id,
               fullName: driverData.name || '',
               email: driverData.email || '',
               phone: driverData.phone || '',
             };
-            
-            console.log('Setting new profile:', newProfile);
             setProfile(newProfile);
-            
-            // Save this data to AsyncStorage for future use
+            setDriverId(driverData._id); // ✅ ID save karo
             await AsyncStorage.setItem(`driverProfile_${driverName}`, JSON.stringify(newProfile));
-          } else {
-            console.log('No driver data found in server response');
           }
         } catch (error) {
           console.log('Error fetching profile from server:', error);
@@ -89,16 +77,9 @@ const Profile = () => {
         Alert.alert('Permission denied', 'Camera roll permission required.');
         return;
       }
-
       if (driverName) {
-        console.log('Loading profile image for:', driverName);
         const savedImageUri = await AsyncStorage.getItem(`profilePhoto_${driverName}`);
-        if (savedImageUri) {
-          console.log('Found saved image URI:', savedImageUri);
-          setImage({ uri: savedImageUri });
-        } else {
-          console.log('No saved image found, using default');
-        }
+        if (savedImageUri) setImage({ uri: savedImageUri });
       }
     })();
   }, [driverName]);
@@ -110,21 +91,61 @@ const Profile = () => {
       aspect: [1, 1],
       quality: 1,
     });
-
     if (!result.canceled && driverName) {
       const uri = result.assets[0].uri;
-      console.log('Saving new profile image for:', driverName);
       setImage({ uri });
       await AsyncStorage.setItem(`profilePhoto_${driverName}`, uri);
     }
   };
 
-  const handleLogout = async () => {
-    await clearAllUserData();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'LoginPage' }],
-    });
+  // ✅ Logout + Database se delete
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout & Delete Account",
+      "Are you sure? Your account will be permanently deleted.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // ✅ Pehle ID dhundo — profile se ya AsyncStorage se
+              let idToDelete = driverId || profile._id;
+
+              if (!idToDelete) {
+                // Agar ID nahi mili toh API se lo
+                const res = await fetch(`${BASE_URL}/api/drivers?name=${driverName}`, {
+                  headers: { 'ngrok-skip-browser-warning': 'true' },
+                });
+                const result = await res.json();
+                if (result.success && result.drivers?.length > 0) {
+                  idToDelete = result.drivers[0]._id;
+                }
+              }
+
+              if (idToDelete) {
+                // ✅ Database se driver delete karo
+                const deleteRes = await fetch(`${BASE_URL}/api/drivers/${idToDelete}`, {
+                  method: 'DELETE',
+                  headers: { 'ngrok-skip-browser-warning': 'true' },
+                });
+                const deleteData = await deleteRes.json();
+                console.log('Delete response:', deleteData);
+              } else {
+                console.log('Driver ID not found, skipping delete');
+              }
+            } catch (err) {
+              console.log('Error deleting driver:', err);
+            }
+
+            // ✅ LocalStorage clear karo aur logout karo
+            await clearAllUserData();
+            navigation.reset({ index: 0, routes: [{ name: 'LoginPage' }] });
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -152,18 +173,13 @@ const Profile = () => {
       <Text style={styles.text}>{profile.fullName || driverName || 'Not available'}</Text>
 
       <Text style={styles.label}>Email</Text>
-      <Text style={styles.text}>{profile.email || 'user@example.com'}</Text>
+      <Text style={styles.text}>{profile.email || 'Not available'}</Text>
 
       <Text style={styles.label}>Phone</Text>
-      <Text style={styles.text}>{profile.phone || '03XXXXXXXXX'}</Text>
+      <Text style={styles.text}>{profile.phone || 'Not available'}</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Driver_UpdateProfile', { profile })}
-      >
-        <Text style={styles.buttonText}>Update</Text>
-      </TouchableOpacity>
-
+      
+      {/* ✅ Logout button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>
@@ -174,41 +190,15 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#f0f0f0' },
   imageSection: { alignItems: 'center' },
-  profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 85,
-    borderWidth: 2,
-    borderColor: '#08edf5ff',
-  },
+  profileImage: { width: 150, height: 150, borderRadius: 85, borderWidth: 2, borderColor: '#08edf5ff' },
   heading: { fontSize: 13, textAlign: 'center', marginTop: 5 },
   label: { fontSize: 18, marginTop: 10 },
   text: { fontSize: 16, color: '#777', marginBottom: 10 },
-  button: {
-    backgroundColor: '#269ee4ff',
-    padding: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  logoutButton: {
-    backgroundColor: '#d34c23ff',
-    padding: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 15,
-  },
+  button: { backgroundColor: '#269ee4ff', padding: 16, borderRadius: 15, alignItems: 'center', marginTop: 20 },
+  logoutButton: { backgroundColor: '#d34c23ff', padding: 16, borderRadius: 15, alignItems: 'center', marginTop: 15 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#555'
-  }
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 10, fontSize: 16, color: '#555' },
 });
 
 export default Profile;

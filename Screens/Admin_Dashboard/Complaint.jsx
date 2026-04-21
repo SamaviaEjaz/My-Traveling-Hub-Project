@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import axios from 'axios';
+import { BASE_URL } from '../../apiConfig';
 
-const SERVER_URL = "http://10.133.138.73:5000/api";
+const SERVER_URL = `${BASE_URL}/api`;
 
 const AdminComplaints = () => {
   const [complaints, setComplaints] = useState([]);

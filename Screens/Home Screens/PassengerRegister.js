@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Entypo } from '@expo/vector-icons';
+import { BASE_URL } from '../../apiConfig';
 
 const PassengerRegister = () => {
   const navigation = useNavigation();
@@ -34,18 +35,18 @@ const PassengerRegister = () => {
     let valid = true;
 
     if (!fullName) { setFullNameError('Full name is required'); valid = false; }
-    if (!email) { setEmailError('Email is required'); valid = false; } 
+    if (!email) { setEmailError('Email is required'); valid = false; }
     else if (!isValidEmail(email)) { setEmailError('Please enter a valid email'); valid = false; }
-    if (!password) { setPasswordError('Password is required'); valid = false; } 
+    if (!password) { setPasswordError('Password is required'); valid = false; }
     else if (!isValidPassword(password)) { setPasswordError('Password must be at least 8 characters, include uppercase, lowercase, number, and special character'); valid = false; }
-    if (!confirmpassword) { setConfirmPasswordError('Confirm Password is required'); valid = false; } 
+    if (!confirmpassword) { setConfirmPasswordError('Confirm Password is required'); valid = false; }
     else if (password !== confirmpassword) { setConfirmPasswordError('Passwords do not match'); valid = false; }
     if (!isValidPhone(phone)) { setPhoneError('Phone number must start with 03 and be 11 digits'); valid = false; }
     if (!valid) return;
 
     setLoading(true);
     try {
-      const response = await fetch('http://10.133.138.73:5000/api/passengers/register', {
+      const response = await fetch(`${BASE_URL}/api/passengers/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName, email, password, phone }),
@@ -53,12 +54,22 @@ const PassengerRegister = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // 存储乘客信息，但先不导航到仪表板
         await AsyncStorage.setItem('passengerData', JSON.stringify({ fullName, email, phone }));
+
+        // ✅ OTP send کریں registration کے بعد
+        try {
+          await fetch('http://10.84.115.73:5000/api/passengers/send-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone }),
+          });
+        } catch (otpError) {
+          console.error('OTP send error:', otpError);
+        }
 
         Alert.alert(
           'Registration Successful',
-          'Your account has been created! Please verify your phone number.',
+          `OTP has been sent to your phone number ${phone}.`,
           [{ text: 'OK', onPress: () => navigation.navigate('Passenger_OTP', { phone }) }]
         );
 
@@ -93,82 +104,39 @@ const PassengerRegister = () => {
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.heading}>Passenger Register</Text>
 
-        {/* Full Name */}
         <View style={styles.inputContainer}>
           <Image source={require('../../assets/images/FullNamelogo.png')} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
-          />
+          <TextInput style={styles.input} placeholder="Full Name" value={fullName} onChangeText={setFullName} />
         </View>
         {fullNameError ? <Text style={styles.error}>{fullNameError}</Text> : null}
 
-        {/* Email */}
         <View style={styles.inputContainer}>
           <Image source={require('../../assets/images/emaillogo.png')} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
         </View>
         {emailError ? <Text style={styles.error}>{emailError}</Text> : null}
 
-        {/* Password */}
         <View style={styles.inputContainer}>
           <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-          />
+          <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry={!showPassword} />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-            {!showPassword ? (
-              <Entypo name="eye" size={22} color="gray" />
-            ) : (
-              <Entypo name="eye-with-line" size={22} color="gray" />
-            )}
+            {!showPassword ? <Entypo name="eye" size={22} color="gray" /> : <Entypo name="eye-with-line" size={22} color="gray" />}
           </TouchableOpacity>
         </View>
         {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
-        {/* Confirm Password */}
         <View style={styles.inputContainer}>
           <Image source={require('../../assets/images/Passwordlogo.png')} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            value={confirmpassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showConfirmPassword}
-          />
+          <TextInput style={styles.input} placeholder="Confirm Password" value={confirmpassword} onChangeText={setConfirmPassword} secureTextEntry={!showConfirmPassword} />
           <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)} style={styles.eyeIcon}>
-            {!showConfirmPassword ? (
-              <Entypo name="eye" size={22} color="gray" />
-            ) : (
-              <Entypo name="eye-with-line" size={22} color="gray" />
-            )}
+            {!showConfirmPassword ? <Entypo name="eye" size={22} color="gray" /> : <Entypo name="eye-with-line" size={22} color="gray" />}
           </TouchableOpacity>
         </View>
         {confirmPasswordError ? <Text style={styles.error}>{confirmPasswordError}</Text> : null}
 
-        {/* Phone */}
         <View style={styles.inputContainer}>
           <Image source={require('../../assets/images/PhoneLogo.png')} style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone"
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="numeric"
-          />
+          <TextInput style={styles.input} placeholder="Phone (03xxxxxxxxx)" value={phone} onChangeText={setPhone} keyboardType="numeric" maxLength={11} />
         </View>
         {phoneError ? <Text style={styles.error}>{phoneError}</Text> : null}
 
@@ -190,16 +158,7 @@ const PassengerRegister = () => {
 const styles = StyleSheet.create({
   container: { justifyContent: 'center', paddingHorizontal: 5, backgroundColor: '#f0f0f0', paddingBottom: 130 },
   heading: { fontSize: 22, fontWeight: 'bold', marginBottom: 30, textAlign: 'center', marginTop: 30 },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#ccc',
-    borderWidth: 2,
-    borderRadius: 3,
-    margin: 10,
-    backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-  },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderColor: '#ccc', borderWidth: 2, borderRadius: 3, margin: 10, backgroundColor: '#FFF', paddingHorizontal: 10 },
   icon: { width: 30, height: 30, marginRight: 8 },
   input: { flex: 1, height: 50, fontSize: 16, color: '#333' },
   eyeIcon: { padding: 5 },

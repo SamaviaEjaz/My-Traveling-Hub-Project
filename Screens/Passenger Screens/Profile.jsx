@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../../apiConfig';
 
 const Profile = () => {
   const navigation = useNavigation();
@@ -118,9 +119,9 @@ const Profile = () => {
       <Text style={styles.label}>Phone Number</Text>
       <Text style={styles.text}>{passengerData.phone || 'Not available'}</Text>
       
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Passenger_UpdateProfile')}>
+      {/* <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Passenger_UpdateProfile')}>
         <Text style={styles.buttonText}>Update</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>

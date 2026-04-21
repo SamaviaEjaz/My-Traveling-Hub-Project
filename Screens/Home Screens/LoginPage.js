@@ -5,88 +5,48 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } fro
 import { Entypo } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DriverContext } from '../Driver Screens/DriverContext';
+import { BASE_URL } from '../../apiConfig';
 
 const LoginPage = () => {
   const navigation = useNavigation();
-  const { saveDriverData, clearAllUserData, createUserSession } = useContext(DriverContext); // Fixed: Using createUserSession
+  const { saveDriverData, clearAllUserData, createUserSession } = useContext(DriverContext);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
   const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidPassword = (password) =>
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?#&])[A-Za-z\d@$!%?#&]{8,}$/.test(password);
-
-  const checkDriverStatus = async (driverEmail) => {
-    try {
-      const response = await fetch(`http://10.133.138.73:5000/api/drivers?email=${driverEmail}`);
-      const data = await response.json();
-      
-      if (response.ok && data.success && data.drivers && data.drivers.length > 0) {
-        return data.drivers[0].status;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error checking driver status:", error);
-      return null;
-    }
-  };
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])[A-Za-z\d\S]{8,}$/.test(password);
 
   const handleLogin = async () => {
     let valid = true;
 
-    if (!fullName) {
-      Alert.alert('Validation Error', 'Full Name is required');
-      valid = false;
-    }
+    if (!email) { setEmailError('Email is required'); valid = false; }
+    else if (!isValidEmail(email)) { setEmailError('Email must be name@example.com'); valid = false; }
+    else { setEmailError(''); }
 
-    if (!email) {
-      setEmailError('Email is required');
+    if (!password) { setPasswordError('Password is required'); valid = false; }
+    else if (!isValidPassword(password)) {
+      setPasswordError('Password must be at least 8 characters, include uppercase, lowercase, number, and special character');
       valid = false;
-    } else if (!isValidEmail(email)) {
-      setEmailError('Email must be name@example.com');
-      valid = false;
-    } else {
-      setEmailError('');
     }
-
-    if (!password) {
-      setPasswordError('Password is required');
-      valid = false;
-    } else if (!isValidPassword(password)) {
-      setPasswordError(
-        'Password must be at least 8 characters, include uppercase, lowercase, number, and special character'
-      );
-      valid = false;
-    } else {
-      setPasswordError('');
-    }
+    else { setPasswordError(''); }
 
     if (!valid) return;
 
     try {
       await clearAllUserData();
-      
-      const driverStatus = await checkDriverStatus(email);
-      
-      if (driverStatus && driverStatus !== 'approved') {
-        Alert.alert(
-          'Account Pending Approval', 
-          'Your account is pending approval. Please wait for admin approval before logging in.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
 
-      // Proceed with login
-      const response = await fetch('http://10.133.138.73:5000/api/drivers/login', {
+      const response = await fetch(`${BASE_URL}/api/drivers/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -94,26 +54,30 @@ const LoginPage = () => {
       console.log('Server response:', data);
 
       if (response.ok && data.success) {
-        // Save driver data using context
-        await saveDriverData(data.driver);
-        
-        // Create a new session for this user
-        const sessionId = await createUserSession(data.driver.name); // Fixed: Using createUserSession
-        
-        // Final status check after login
-        if (data.driver && data.driver.status === 'approved') {
-          // Navigate to dashboard with driver name as parameter
-          navigation.navigate('Driver_Dashboard', { 
-            driverName: data.driver.name,
-            newSession: true 
-          });
-        } else {
-          Alert.alert(
-            'Account Pending Approval', 
-            'Your account is pending approval. Please wait for admin approval before logging in.',
-            [{ text: 'OK' }]
-          );
+
+        if (data.driver.status !== 'approved') {
+          Alert.alert('Account Pending Approval', 'Your account is pending approval.', [{ text: 'OK' }]);
+          return;
         }
+
+        await saveDriverData(data.driver);
+
+        await AsyncStorage.removeItem(`driverProfile_${data.driver.name}`);
+        const profileData = {
+          fullName: data.driver.name || '',
+          email: data.driver.email || '',
+          phone: data.driver.phone || '',
+        };
+        await AsyncStorage.setItem(`driverProfile_${data.driver.name}`, JSON.stringify(profileData));
+        console.log('Profile saved on login:', profileData);
+
+        await createUserSession(data.driver.name);
+
+        navigation.navigate('Driver_Dashboard', {
+          driverName: data.driver.name,
+          newSession: true,
+        });
+
       } else {
         Alert.alert('Login Failed', data.message || 'Invalid credentials');
       }
@@ -159,18 +123,16 @@ const LoginPage = () => {
           secureTextEntry={!showPassword}
         />
         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-          {!showPassword ? (
-            <Entypo name="eye" size={24} color="gray" />
-          ) : (
-            <Entypo name="eye-with-line" size={24} color="gray" />
-          )}
+          {!showPassword
+            ? <Entypo name="eye" size={24} color="gray" />
+            : <Entypo name="eye-with-line" size={24} color="gray" />
+          }
         </TouchableOpacity>
       </View>
       {passwordError ? <Text style={styles.error}>{passwordError}</Text> : null}
 
-       <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Forget')}>
+      <View style={{ alignItems: 'flex-end', marginRight: 15, marginBottom: 10 }}>
+        <TouchableOpacity onPress={() => navigation.navigate('Forget')}>
           <Text style={{ color: '#210ce1c3', fontWeight: 'bold' }}>ForgetPassword</Text>
         </TouchableOpacity>
       </View>
@@ -190,63 +152,15 @@ const LoginPage = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    backgroundColor: '#f0f0f0',
-    flex: 1,
-    paddingBottom: 90,
-  },
-  heading: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 40,
-    marginBottom: 20,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderColor: '#ccc',
-    borderWidth: 2,
-    borderRadius: 3,
-    margin: 7,
-    backgroundColor: '#FFF',
-    paddingHorizontal: 10,
-  },
-  icon: {
-    width: 30,
-    height: 30,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    height: 50,
-    fontSize: 16,
-    color: '#333',
-  },
-  button: {
-    backgroundColor: '#6d6fc2ff',
-    padding: 16,
-    borderRadius: 15,
-    alignItems: 'center',
-    marginHorizontal: 60,
-    marginTop: 15,
-  },
-  buttontext: {
-    color: 'white',
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  error: {
-    color: 'red',
-    marginLeft: 20,
-    marginBottom: 5,
-  },
-  eyeIcon: {
-    padding: 5,
-  },
+  container: { justifyContent: 'center', paddingHorizontal: 10, backgroundColor: '#f0f0f0', flex: 1, paddingBottom: 90 },
+  heading: { fontSize: 26, fontWeight: 'bold', color: '#333', textAlign: 'center', marginTop: 40, marginBottom: 20 },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', borderColor: '#ccc', borderWidth: 2, borderRadius: 3, margin: 7, backgroundColor: '#FFF', paddingHorizontal: 10 },
+  icon: { width: 30, height: 30, marginRight: 8 },
+  input: { flex: 1, height: 50, fontSize: 16, color: '#333' },
+  button: { backgroundColor: '#6d6fc2ff', padding: 16, borderRadius: 15, alignItems: 'center', marginHorizontal: 60, marginTop: 15 },
+  buttontext: { color: 'white', fontSize: 15, fontWeight: 'bold' },
+  error: { color: 'red', marginLeft: 20, marginBottom: 5 },
+  eyeIcon: { padding: 5 },
 });
 
 export default LoginPage;

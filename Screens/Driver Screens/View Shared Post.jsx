@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity } from 'react-native';
 import { DriverContext } from './DriverContext';
+import { BASE_URL } from '../../apiConfig';
 
 const ViewSharedPost = () => {
   const { driverName } = useContext(DriverContext);
@@ -9,7 +10,7 @@ const ViewSharedPost = () => {
 
   const fetchRides = () => {
     setRefreshing(true);
-    fetch("http://10.133.138.73:5000/api/rides")
+    fetch(`${BASE_URL}/api/rides`)
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -28,7 +29,7 @@ const ViewSharedPost = () => {
   }, [driverName]);
 
   const handleDelete = (id) => {
-    fetch(`http://10.133.138.73:5000/api/rides/${id}`, {
+    fetch(`${BASE_URL}/api/rides/${id}`, {
       method: "DELETE",
     })
       .then(res => res.json())

@@ -1,6 +1,7 @@
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { BASE_URL } from '../../apiConfig';
 import axios from 'axios';
 
 const Forget = () => {
@@ -27,7 +28,7 @@ const Forget = () => {
     setIsLoading(true);
     
     try {
-      const response = await axios.post("http://10.190.119.73:5000/api/send-otp", { 
+      const response = await axios.post(`${BASE_URL}/api/send-otp`, { 
         email: email.trim() 
       });
       

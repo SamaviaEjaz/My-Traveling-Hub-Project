@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import React, { useState } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import axios from 'axios';
+import { BASE_URL } from '../../apiConfig';
 
 const ResetPassword = () => {
   const navigation = useNavigation();
@@ -45,14 +46,14 @@ const ResetPassword = () => {
     
     setIsLoading(true);
     try {
-      const response = await axios.post("http://10.186.73.73:5000/api/reset-password", {
+      const response = await axios.post(`${BASE_URL}/api/reset-password`, {
         email,
         password: newPassword
       });
 
       if (response.data.success) {
         Alert.alert('Success', 'Password reset successfully!');
-        navigation.navigate('Login'); // Assuming you have a Login screen
+        navigation.navigate('LoginPage'); // Assuming you have a Login screen
       } else {
         Alert.alert('Error', response.data.message || 'Failed to reset password');
       }
