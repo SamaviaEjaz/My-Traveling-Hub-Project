@@ -1,4 +1,3 @@
-// Home.js
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { useNavigation } from '@react-navigation/native';
@@ -11,7 +10,6 @@ const Home = ({ route }) => {
   const [currentSessionId, setCurrentSessionId] = useState('');
 
   useEffect(() => {
-    // Update local state when props change
     if (route.params?.driverName && route.params?.driverName !== currentDriverName) {
       setCurrentDriverName(route.params.driverName);
       console.log("Home: Driver name updated to:", route.params.driverName);
@@ -23,7 +21,6 @@ const Home = ({ route }) => {
     }
   }, [route.params, currentDriverName, currentSessionId]);
 
-  // Use context values as fallback
   const displayName = currentDriverName || driverName || "Driver";
   const displaySessionId = currentSessionId || userSessionId || '';
 
@@ -63,8 +60,8 @@ const Home = ({ route }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, // full screen
-    justifyContent: 'center', // center vertically
+    flex: 1, 
+    justifyContent: 'center', 
     paddingHorizontal: 5,
     backgroundColor: '#f0f0f0',
   },

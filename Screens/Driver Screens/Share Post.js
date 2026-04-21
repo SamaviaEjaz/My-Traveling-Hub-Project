@@ -160,8 +160,6 @@ const SharePost = ({ navigation }) => {
         return;
       }
 
-      // CRITICAL: Prepare route data with proper structure
-      // Each waypoint MUST have name, latitude, and longitude as numbers
       const routeData = routeWaypoints.map(wp => {
         const waypointName = wp.name || `Point (${wp.latitude.toFixed(4)}, ${wp.longitude.toFixed(4)})`;
         return {
@@ -186,7 +184,7 @@ const SharePost = ({ navigation }) => {
           time,
           vehicle,
           seats,
-          route: routeData,  // Array of waypoint objects with name, lat, lng
+          route: routeData,  
           fromLocation: fromLocation ? {
             latitude: parseFloat(fromLocation.latitude),
             longitude: parseFloat(fromLocation.longitude),
@@ -535,7 +533,6 @@ const SharePost = ({ navigation }) => {
         />
       )}
 
-      {/* ================= CITY INPUT MODAL ================= */}
       <Modal
         visible={showLocationInputModal}
         transparent={true}
@@ -606,7 +603,6 @@ const SharePost = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* ================= ROUTE MAP MODAL ================= */}
       <Modal
         visible={showRouteMapModal}
         animationType="slide"
@@ -624,7 +620,6 @@ const SharePost = ({ navigation }) => {
             region={mapRegion}
             onPress={handleMapPress}
           >
-            {/* From Marker */}
             {fromLocation && (
               <Marker
                 coordinate={{
@@ -637,7 +632,6 @@ const SharePost = ({ navigation }) => {
               />
             )}
 
-            {/* Waypoint Markers */}
             {routeWaypoints.map((waypoint, index) => (
               <Marker
                 key={index}
@@ -651,7 +645,6 @@ const SharePost = ({ navigation }) => {
               />
             ))}
 
-            {/* To Marker */}
             {toLocation && (
               <Marker
                 coordinate={{
@@ -664,7 +657,6 @@ const SharePost = ({ navigation }) => {
               />
             )}
 
-            {/* Route Line */}
             {fromLocation && toLocation && (
               <Polyline
                 coordinates={getRouteCoordinates()}
@@ -674,7 +666,6 @@ const SharePost = ({ navigation }) => {
             )}
           </MapView>
 
-          {/* Waypoints List */}
           {routeWaypoints.length > 0 && (
             <View style={styles.waypointsContainer}>
               <View style={styles.waypointsHeader}>

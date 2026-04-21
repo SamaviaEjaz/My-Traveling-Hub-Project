@@ -1,13 +1,10 @@
-// DriverReviews.js
 import React, { useEffect, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, View } from "react-native";
 import axios from "axios";
 import { BASE_URL } from '../../apiConfig';
 
-// ✅ Context hatao - route.params se driverName lo
-// DriverReviews.js mein upar
-  const DriverReviews = ({ route }) => {
-  const driverName = route?.params?.driverName; // ✅ ✅ GetRide se pass hoga
+const DriverReviews = ({ route }) => {
+  const driverName = route?.params?.driverName; 
   const [reviewsData, setReviewsData] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -22,9 +19,9 @@ import { BASE_URL } from '../../apiConfig';
       const res = await axios.get(`${BASE_URL}/api/reviews`, {
         headers: { 'ngrok-skip-browser-warning': 'true' },
       });
-      // ✅ Sirf us driver ke reviews filter karo
-      const driverReviews = res.data.filter(r => r.driverName === driverName);
-      setReviewsData(driverReviews);
+      const driverReviews = res.data.filter(
+        r => r.driverName?.trim().toLowerCase() === driverName?.trim().toLowerCase()
+      ); setReviewsData(driverReviews);
     } catch (err) {
       console.error("Error fetching reviews:", err);
     } finally {
@@ -54,10 +51,9 @@ import { BASE_URL } from '../../apiConfig';
       <View style={styles.driverInfo}>
         <Image source={require("../../assets/images/Profileimage.png")} style={styles.driverImage} />
         <View style={{ marginLeft: 10, flex: 1 }}>
+          <Text style={styles.passengerName}> {item.passengerName || 'Anonymous'}</Text>
           <Text style={styles.rating}>{renderStars(item.rating)} ({item.rating})</Text>
           <Text style={styles.comment}>{item.comment}</Text>
-          <Text style={styles.passengerName}>👤 {item.passengerName || 'Anonymous'}</Text>
-          <Text style={styles.passengerPhone}>📞 {item.passengerPhone || 'Not provided'}</Text>
           <Text style={styles.date}>{item.date || "No date"}</Text>
         </View>
       </View>
@@ -68,7 +64,6 @@ import { BASE_URL } from '../../apiConfig';
     return (
       <View style={styles.container}>
         <View style={styles.center}>
-          {/* ✅ Driver ka naam heading mein dikhao */}
           <Text style={styles.heading}>{driverName ? `${driverName}'s Reviews` : 'Reviews'}</Text>
           <Text style={styles.loadingText}>Loading reviews...</Text>
         </View>
@@ -78,7 +73,6 @@ import { BASE_URL } from '../../apiConfig';
 
   return (
     <View style={styles.container}>
-      {/* ✅ Driver ka naam heading mein */}
       <Text style={styles.heading}>{driverName ? `${driverName}'s Reviews` : 'Reviews'}</Text>
 
       {driverName ? (

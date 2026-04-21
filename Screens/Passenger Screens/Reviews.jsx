@@ -22,9 +22,7 @@ const ReviewForm = ({ onReviewSubmitted }) => {
     const getUserInfo = async () => {
       try {
         const name = await AsyncStorage.getItem('passengerName');
-        const phone = await AsyncStorage.getItem('passengerPhone');
         setPassengerName(name || '');
-        setPassengerPhone(phone || ''); // ✅ phone set karo
       } catch (error) {
         console.error("Error getting user info:", error);
       }

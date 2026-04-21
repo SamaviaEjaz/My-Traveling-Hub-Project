@@ -1,4 +1,3 @@
-// ReceiveRequest.js
 import React, { useState, useEffect, useContext } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { DriverContext } from './DriverContext';
@@ -96,7 +95,6 @@ const ReceiveRequest = () => {
         <Text style={styles.detail}>Seats: {item.seats}</Text>
         <Text style={styles.detail}>Current Status: {item.status}</Text>
 
-        {/* ✅ Passenger info sirf accepted/completed pe show karo */}
         {(isAccepted || isCompleted) && (
           <View style={styles.passengerInfoBox}>
             <Text style={styles.passengerInfoTitle}>👤 Passenger Contact Info</Text>
@@ -160,7 +158,7 @@ const styles = StyleSheet.create({
   driverImage: { width: 50, height: 50, borderRadius: 25 },
   driverName: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
   detail: { fontSize: 15, marginVertical: 2 },
-  // ✅ Passenger info box
+
   passengerInfoBox: { backgroundColor: '#e3f2fd', padding: 12, borderRadius: 8, marginTop: 10, borderWidth: 1, borderColor: '#297ce9' },
   passengerInfoTitle: { fontSize: 16, fontWeight: 'bold', color: '#1565c0', marginBottom: 5 },
   passengerInfoText: { fontSize: 15, color: '#333', marginVertical: 2 },

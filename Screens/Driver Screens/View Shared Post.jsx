@@ -23,7 +23,6 @@ const ViewSharedPost = () => {
   };
 
   useEffect(() => {
-    // Reset rides when driver changes
     setRides([]);
     fetchRides();
   }, [driverName]);

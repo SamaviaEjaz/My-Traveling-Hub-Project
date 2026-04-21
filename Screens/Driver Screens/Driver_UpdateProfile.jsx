@@ -1,4 +1,3 @@
-// Driver_UpdateProfile.js
 import React, { useState, useContext } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -25,10 +24,8 @@ const Driver_UpdateProfile = () => {
     }
 
     try {
-      // ✅ AsyncStorage mn save karo
       await AsyncStorage.setItem(`driverProfile_${driverName}`, JSON.stringify(profile));
 
-      // ✅ Server update
       try {
         const response = await fetch(`${BASE_URL}/api/drivers/${driverName}`, {
           method: 'PUT',
@@ -48,7 +45,6 @@ const Driver_UpdateProfile = () => {
         console.log('Server update failed, local storage updated:', error);
       }
 
-      // ✅ Alert ke baad sirf Profile screen pe jao
       Alert.alert('Success', 'Profile updated successfully', [
         {
           text: 'OK',

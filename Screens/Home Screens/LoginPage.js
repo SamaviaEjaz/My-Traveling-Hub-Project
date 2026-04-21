@@ -39,8 +39,6 @@ const LoginPage = () => {
     if (!valid) return;
 
     try {
-      await clearAllUserData();
-
       const response = await fetch(`${BASE_URL}/api/drivers/login`, {
         method: 'POST',
         headers: {
@@ -60,19 +58,34 @@ const LoginPage = () => {
           return;
         }
 
+        // ✅ Step 1: Pehle clear karo
+        await clearAllUserData();
+
+        // ✅ Step 2: Saari purani driverProfile_ cache delete karo
+        const allKeys = await AsyncStorage.getAllKeys();
+        const profileKeys = allKeys.filter(key => key.startsWith('driverProfile_'));
+        if (profileKeys.length > 0) {
+          await AsyncStorage.multiRemove(profileKeys);
+          console.log('Purani profile cache delete hui:', profileKeys);
+        }
+
+        // ✅ Step 3: Naya driver data save karo
         await saveDriverData(data.driver);
 
-        await AsyncStorage.removeItem(`driverProfile_${data.driver.name}`);
+        // ✅ Step 4: Naya profile data save karo with _id aur phone
         const profileData = {
+          _id: data.driver._id || '',
           fullName: data.driver.name || '',
           email: data.driver.email || '',
-          phone: data.driver.phone || '',
+          phone: data.driver.phone || '',   // ✅ yeh already hai
         };
         await AsyncStorage.setItem(`driverProfile_${data.driver.name}`, JSON.stringify(profileData));
-        console.log('Profile saved on login:', profileData);
+        console.log('Naya profile saved:', profileData);
 
+        // ✅ Step 5: Session banao
         await createUserSession(data.driver.name);
 
+        // ✅ Step 6: Dashboard pe jao
         navigation.navigate('Driver_Dashboard', {
           driverName: data.driver.name,
           newSession: true,

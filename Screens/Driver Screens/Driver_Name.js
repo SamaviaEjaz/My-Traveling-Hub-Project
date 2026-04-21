@@ -8,10 +8,8 @@ const Driver_Dashboard = () => {
   const { driverName } = route.params || {}; // Get driverName from login
 
   useEffect(() => {
-    // Debug: Check if driverName is received
     console.log('Driver_Dashboard mounted with driverName:', driverName);
     
-    // If driverName is not available, show an alert and navigate back
     if (!driverName) {
       Alert.alert(
         'Error',
@@ -27,15 +25,12 @@ const Driver_Dashboard = () => {
   }, [driverName, navigation]);
 
   const handleSharePost = () => {
-    // Debug: Check driverName before navigating
     console.log('Navigating to SharePost with driverName:', driverName);
     
-    // Pass driverName when navigating to SharePost
     navigation.navigate('SharePost', { driverName });
   };
 
   const handleViewRides = () => {
-    // Pass driverName when navigating to View Rides
     navigation.navigate('ViewSharedPost', { driverName });
   };
 

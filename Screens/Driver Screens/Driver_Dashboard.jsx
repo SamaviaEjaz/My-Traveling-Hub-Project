@@ -1,13 +1,11 @@
-// Driver_Dashboard.js
 import React, { useContext, useEffect, useState } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Text, View, Alert } from 'react-native';
+import { Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { DriverContext } from './DriverContext';
 import Home from './Home';
-// import Chat from './ChatTemp';
 import Reviews from './DriverReviews';
 import Profile from './Profile';
 
@@ -28,14 +26,10 @@ const Driver_Dashboard = ({ route }) => {
     const handleUserLogin = async () => {
       try {
         if (route.params?.driverName) {
-          await clearAllUserData();
-          
           const newDriverName = route.params.driverName;
           setDriverName(newDriverName);
           await saveDriverName(newDriverName);
-          
           await createUserSession(newDriverName);
-          
           console.log(`New user logged in: ${newDriverName}`);
         } else {
           const name = contextDriverName || await AsyncStorage.getItem('driverName');
@@ -54,12 +48,12 @@ const Driver_Dashboard = ({ route }) => {
     };
     
     handleUserLogin();
-  }, [route.params?.driverName, contextDriverName, saveDriverName, clearAllUserData, createUserSession]); // Fixed: Added createUserSession to dependency array
+  }, [route.params?.driverName, contextDriverName, saveDriverName, clearAllUserData, createUserSession]);
 
   const resetTabScreens = () => {
     return {
       driverName,
-      key: `${driverName || 'default'}-${userSessionId || 'no-session'}`, // Force re-mount when driver changes
+      key: `${driverName || 'default'}-${userSessionId || 'no-session'}`,
     };
   };
 
@@ -94,10 +88,6 @@ const Driver_Dashboard = ({ route }) => {
               iconName = 'home';
               label = 'Home';
               break;
-            // case 'Chat':
-            //   iconName = 'chatbubble-ellipses';
-            //   label = 'Chat';
-            //   break;
             case 'Reviews':
               iconName = 'star';
               label = 'Feedback';
@@ -113,9 +103,9 @@ const Driver_Dashboard = ({ route }) => {
               <Ionicons name={iconName} size={25} color={focused ? 'blue' : 'gray'} />
               <Text
                 style={{
-                  fontSize:7,
+                  fontSize: 7,
                   color: focused ? 'blue' : 'gray',
-                  marginTop:5, 
+                  marginTop: 5, 
                   textAlign: 'center',
                 }}
               >
@@ -131,11 +121,6 @@ const Driver_Dashboard = ({ route }) => {
         component={Home} 
         initialParams={resetTabScreens()} 
       />
-      {/* <Tab.Screen 
-        name="Chat" 
-        component={Chat} 
-        initialParams={resetTabScreens()} 
-      /> */}
       <Tab.Screen 
         name="Reviews" 
         component={Reviews} 

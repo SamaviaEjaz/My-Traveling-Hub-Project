@@ -1,4 +1,3 @@
-// Profile.js
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -14,59 +13,67 @@ const Profile = () => {
   const [image, setImage] = useState(require('../../assets/images/ProfilePhoto.png'));
   const [profile, setProfile] = useState({ fullName: '', email: '', phone: '' });
   const [loading, setLoading] = useState(true);
-  const [initialLoad, setInitialLoad] = useState(true);
   const [driverId, setDriverId] = useState(null);
+  console.log('DRIVER NAME IN PROFILE:', driverName);
 
   useFocusEffect(
     React.useCallback(() => {
-      if (driverName) loadProfileData();
+      if (driverName) {
+        loadProfileData();
+      }
     }, [driverName])
   );
 
   const loadProfileData = async () => {
     try {
-      if (initialLoad) setLoading(true);
-      console.log('Loading profile for driver:', driverName);
+      setLoading(true);
 
-      const cachedData = await AsyncStorage.getItem(`driverProfile_${driverName}`);
+      await AsyncStorage.removeItem(`driverProfile_${driverName}`);
 
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData);
-        setProfile(parsed);
-        // ✅ Cache se bhi id lo agar ho
-        if (parsed._id) setDriverId(parsed._id);
-        setLoading(false);
-        setInitialLoad(false);
-      } else {
-        try {
-          const response = await fetch(`${BASE_URL}/api/drivers?name=${driverName}`, {
-            headers: { 'ngrok-skip-browser-warning': 'true' },
-          });
-          const result = await response.json();
+      const response = await fetch(
+        `${BASE_URL}/api/drivers?name=${encodeURIComponent(driverName)}`,
+        { headers: { 'ngrok-skip-browser-warning': 'true' } }
+      );
 
-          if (response.ok && result.success && result.drivers && result.drivers.length > 0) {
-            const driverData = result.drivers[0];
-            const newProfile = {
-              _id: driverData._id,
-              fullName: driverData.name || '',
-              email: driverData.email || '',
-              phone: driverData.phone || '',
-            };
-            setProfile(newProfile);
-            setDriverId(driverData._id); // ✅ ID save karo
-            await AsyncStorage.setItem(`driverProfile_${driverName}`, JSON.stringify(newProfile));
-          }
-        } catch (error) {
-          console.log('Error fetching profile from server:', error);
-        } finally {
+      const result = await response.json();
+      console.log('DB result:', result);
+
+      if (response.ok && result.success && result.drivers?.length > 0) {
+
+        const trimmedName = driverName?.trim();
+
+        const driverData = result.drivers.find(
+          d => d.name?.trim().toLowerCase() === trimmedName.toLowerCase()
+        );
+
+        if (!driverData) {
+          console.log('Driver not found!');
           setLoading(false);
-          setInitialLoad(false);
+          return;
         }
+
+        const newProfile = {
+          _id: driverData._id || '',
+          fullName: driverData.name || '',
+          email: driverData.email || '',
+          phone: driverData.phone || '',
+        };
+
+        console.log('Profile set:', newProfile);
+
+        setProfile(newProfile);
+        setDriverId(driverData._id);
+
+        await AsyncStorage.setItem(
+          `driverProfile_${driverName}`,
+          JSON.stringify(newProfile)
+        );
       }
+
     } catch (error) {
-      console.log('Error loading profile:', error);
+      console.log('Profile load error:', error);
+    } finally {
       setLoading(false);
-      setInitialLoad(false);
     }
   };
 
@@ -98,7 +105,6 @@ const Profile = () => {
     }
   };
 
-  // ✅ Logout + Database se delete
   const handleLogout = () => {
     Alert.alert(
       "Logout & Delete Account",
@@ -110,36 +116,46 @@ const Profile = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              // ✅ Pehle ID dhundo — profile se ya AsyncStorage se
               let idToDelete = driverId || profile._id;
 
               if (!idToDelete) {
-                // Agar ID nahi mili toh API se lo
-                const res = await fetch(`${BASE_URL}/api/drivers?name=${driverName}`, {
-                  headers: { 'ngrok-skip-browser-warning': 'true' },
-                });
+                const res = await fetch(
+                  `${BASE_URL}/api/drivers?name=${encodeURIComponent(driverName)}`,
+                  { headers: { 'ngrok-skip-browser-warning': 'true' } }
+                );
+
                 const result = await res.json();
+
                 if (result.success && result.drivers?.length > 0) {
-                  idToDelete = result.drivers[0]._id;
+                  const trimmedName = driverName?.trim();
+
+                  const matchedDriver = result.drivers.find(
+                    d => d.name?.trim().toLowerCase() === trimmedName.toLowerCase()
+                  );
+
+                  if (matchedDriver) {
+                    idToDelete = matchedDriver._id;
+                  }
                 }
               }
 
               if (idToDelete) {
-                // ✅ Database se driver delete karo
-                const deleteRes = await fetch(`${BASE_URL}/api/drivers/${idToDelete}`, {
-                  method: 'DELETE',
-                  headers: { 'ngrok-skip-browser-warning': 'true' },
-                });
+                const deleteRes = await fetch(
+                  `${BASE_URL}/api/drivers/${idToDelete}`,
+                  {
+                    method: 'DELETE',
+                    headers: { 'ngrok-skip-browser-warning': 'true' },
+                  }
+                );
+
                 const deleteData = await deleteRes.json();
                 console.log('Delete response:', deleteData);
-              } else {
-                console.log('Driver ID not found, skipping delete');
               }
+
             } catch (err) {
               console.log('Error deleting driver:', err);
             }
 
-            // ✅ LocalStorage clear karo aur logout karo
             await clearAllUserData();
             navigation.reset({ index: 0, routes: [{ name: 'LoginPage' }] });
           }
@@ -147,17 +163,6 @@ const Profile = () => {
       ]
     );
   };
-
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#269ee4ff" />
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -178,8 +183,6 @@ const Profile = () => {
       <Text style={styles.label}>Phone</Text>
       <Text style={styles.text}>{profile.phone || 'Not available'}</Text>
 
-      
-      {/* ✅ Logout button */}
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Text style={styles.buttonText}>Logout</Text>
       </TouchableOpacity>

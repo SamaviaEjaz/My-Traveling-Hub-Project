@@ -1,4 +1,3 @@
-// DriverContext.js
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../../apiConfig';
@@ -11,7 +10,6 @@ export const DriverProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [userSession, setUserSession] = useState(null);
 
-  // ✅ Sirf trim karo — lowercase nahi
   const normalizeName = (name) =>
     typeof name === 'string' ? name.trim() : null;
 
@@ -162,8 +160,7 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName, saveProfileData]);
 
-  // ✅ driverProfile_ keys delete nahi hogi logout pe
-  const clearAllUserData = useCallback(async () => {
+ const clearAllUserData = useCallback(async () => {
     try {
       await AsyncStorage.multiRemove(['driverData', 'driverName', 'userSession']);
 
@@ -179,8 +176,6 @@ export const DriverProvider = ({ children }) => {
         await AsyncStorage.multiRemove(removableKeys);
       }
 
-      setDriverData(null);
-      setDriverName(null);
       setUserSession(null);
 
       console.log("DriverContext: All user data cleared");
