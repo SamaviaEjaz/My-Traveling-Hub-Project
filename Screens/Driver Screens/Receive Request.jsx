@@ -151,23 +151,78 @@ const ReceiveRequest = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
-  emptyText: { textAlign: 'center', marginTop: 30, fontSize: 18, color: '#666' },
-  card: { backgroundColor: '#eee9e7ff', padding: 15, borderRadius: 10, marginBottom: 15 },
-  driverInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  driverImage: { width: 50, height: 50, borderRadius: 25 },
-  driverName: { fontSize: 18, fontWeight: 'bold', marginLeft: 10 },
-  detail: { fontSize: 15, marginVertical: 2 },
+  container: { 
+    flex: 1, 
+    padding: 16,
+     backgroundColor: '#fff' },
+  emptyText: { 
+    textAlign: 'center', 
+    marginTop: 30, 
+    fontSize: 18, 
+    color: '#666' },
+  card: { 
+    backgroundColor: '#eee9e7ff', 
+    padding: 15,
+     borderRadius: 10,
+     marginBottom: 15 },
+  driverInfo: { 
+    flexDirection: 'row',
+     alignItems: 'center', 
+    marginBottom: 10 },
+  driverImage: {
+     width: 50,
+     height: 50, 
+    borderRadius: 25 },
+  driverName: { 
+    fontSize: 18, 
+    fontWeight: 'bold',
+     marginLeft: 10 },
+  detail: { 
+    fontSize: 15,
+     marginVertical: 2 },
 
-  passengerInfoBox: { backgroundColor: '#e3f2fd', padding: 12, borderRadius: 8, marginTop: 10, borderWidth: 1, borderColor: '#297ce9' },
-  passengerInfoTitle: { fontSize: 16, fontWeight: 'bold', color: '#1565c0', marginBottom: 5 },
-  passengerInfoText: { fontSize: 15, color: '#333', marginVertical: 2 },
+  passengerInfoBox: {
+     backgroundColor: '#e3f2fd',
+     padding: 12, 
+    borderRadius: 8,
+     marginTop: 10,
+     borderWidth: 1, 
+    borderColor: '#297ce9' },
+  passengerInfoTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#1565c0', 
+    marginBottom: 5 },
+  passengerInfoText: { 
+    fontSize: 15, 
+    color: '#333',
+     marginVertical: 2 },
   btnRow: { flexDirection: 'row', marginTop: 10 },
-  acceptBtn: { flex: 1, backgroundColor: 'green', padding: 10, marginRight: 5, borderRadius: 8 },
-  rejectBtn: { flex: 1, backgroundColor: 'red', padding: 10, marginLeft: 5, borderRadius: 8 },
-  completeBtn: { marginTop: 10, backgroundColor: '#1e88e5', padding: 12, borderRadius: 8 },
-  btnText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
-  completeText: { color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 16 },
+  acceptBtn: { 
+    flex: 1, 
+    backgroundColor: 'green',
+     padding: 10,
+     marginRight: 5, borderRadius: 8 },
+  rejectBtn: { 
+    flex: 1,
+     backgroundColor: 'red',
+     padding: 10,
+     marginLeft: 5,
+     borderRadius: 8 },
+  completeBtn: {
+     marginTop: 10, 
+    backgroundColor: '#1e88e5', 
+    padding: 12, 
+    borderRadius: 8 },
+  btnText: { 
+    color: '#fff', 
+    textAlign: 'center', 
+    fontWeight: 'bold' },
+  completeText: { 
+    color: '#fff',
+     textAlign: 'center', 
+    fontWeight: 'bold', 
+    fontSize: 16 },
 });
 
 export default ReceiveRequest;

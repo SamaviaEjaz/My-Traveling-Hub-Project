@@ -14,7 +14,7 @@ const Driver_OTP = () => {
   const [count, setCount] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  const [testOTP, setTestOTP] = useState(null); // For testing only
+  const [testOTP, setTestOTP] = useState(null); 
 
   useEffect(() => {
     inputs[0].current?.focus();
@@ -57,7 +57,7 @@ const Driver_OTP = () => {
         [
           {
             text: "OK",
-            onPress: () => navigation.navigate('WelCome') // ✅ Welcome screen pe wapas jao
+            onPress: () => navigation.navigate('WelCome') 
           }
         ]
       );
@@ -135,7 +135,6 @@ const Driver_OTP = () => {
     } catch (error) {
       console.error("Resend OTP error:", error);
 
-      // For testing only - show the OTP if it's included in the error response
       if (error.response?.data?.otp) {
         setTestOTP(error.response.data.otp);
         Alert.alert(
@@ -155,7 +154,6 @@ const Driver_OTP = () => {
       <Text style={styles.title}>OTP Verification</Text>
       <Text style={styles.subtitle}>Code sent to {phone}</Text>
 
-      {/* For testing only - show the OTP if available */}
       {testOTP && (
         <View style={styles.testOtpContainer}>
           <Text style={styles.testOtpText}>For Testing Only: {testOTP}</Text>

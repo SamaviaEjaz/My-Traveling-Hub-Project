@@ -6,9 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const ChatList = () => {
   const navigation = useNavigation();
   const [chats, setChats] = useState([]);
-  const [userType, setUserType] = useState(''); // 'passenger' ya 'driver'
+  const [userType, setUserType] = useState(''); 
 
-  // User data load karna
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -17,15 +16,12 @@ const ChatList = () => {
           const parsedData = JSON.parse(userData);
           setUserType(parsedData.userType);
           
-          // Abhi ke liye dummy data, baad mein API se data lena
           if (parsedData.userType === 'passenger') {
-            // Passenger ko drivers dikhayein
             setChats([
               { id: '1', name: 'Driver Ahmed', lastMessage: 'I am available', time: '2:30 PM', type: 'driver' },
               { id: '2', name: 'Driver Ali', lastMessage: 'Where are you?', time: '1:45 PM', type: 'driver' },
             ]);
           } else {
-            // Driver ko passengers dikhayein
             setChats([
               { id: '1', name: 'Passenger Moosa', lastMessage: 'Need a ride', time: '2:30 PM', type: 'passenger' },
               { id: '2', name: 'Passenger Khan', lastMessage: 'Are you coming?', time: '1:45 PM', type: 'passenger' },

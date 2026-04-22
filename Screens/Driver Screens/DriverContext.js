@@ -131,7 +131,6 @@ export const DriverProvider = ({ children }) => {
     }
   }, [driverName]);
 
-  // ✅ BASE_URL + ngrok header
   const fetchDriverProfile = useCallback(async (name = null) => {
     try {
       const targetName = name || driverName;
