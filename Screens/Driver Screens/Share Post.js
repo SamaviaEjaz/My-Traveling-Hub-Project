@@ -127,7 +127,7 @@ const SharePost = ({ navigation }) => {
     setSelectedDate(selected);
   };
 
- const handleTimeChange = (_, selected) => {
+  const handleTimeChange = (_, selected) => {
     setShowTimePicker(false);
     if (!selected) return;
 
@@ -148,13 +148,13 @@ const SharePost = ({ navigation }) => {
 
     try {
       setIsLoading(true);
-      const backendUrl =`${BASE_URL}/api/rides`;
+      const backendUrl = `${BASE_URL}/api/rides`;
 
       const checkRes = await fetch(backendUrl);
       const checkData = await checkRes.json();
       const existing = checkData.rides.find(r => r.driverName === driverName);
 
-      if (existing) {
+      if (existing ==1) {
         Alert.alert("Already Shared", "You already have a shared ride. Please delete it before sharing a new Post.");
         setIsLoading(false);
         return;
@@ -184,7 +184,7 @@ const SharePost = ({ navigation }) => {
           time,
           vehicle,
           seats,
-          route: routeData,  
+          route: routeData,
           fromLocation: fromLocation ? {
             latitude: parseFloat(fromLocation.latitude),
             longitude: parseFloat(fromLocation.longitude),
@@ -245,7 +245,6 @@ const SharePost = ({ navigation }) => {
   const getCityCoordinates = (locationName) => {
     const cityName = locationName.toLowerCase().trim();
 
-    // Direct match
     if (CITY_COORDINATES[cityName]) {
       return CITY_COORDINATES[cityName];
     }
@@ -361,10 +360,10 @@ const SharePost = ({ navigation }) => {
     const newWaypoint = nearestCity
       ? { ...nearestCity, latitude, longitude }
       : {
-          latitude,
-          longitude,
-          name: `Point (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
-        };
+        latitude,
+        longitude,
+        name: `Point (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
+      };
 
     setRouteWaypoints([...routeWaypoints, newWaypoint]);
   };
@@ -436,7 +435,6 @@ const SharePost = ({ navigation }) => {
         </View>
       </View>
 
-      {/* FROM */}
       <TouchableOpacity
         style={styles.input}
         onPress={() => {
@@ -451,7 +449,6 @@ const SharePost = ({ navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      {/* TO */}
       <TouchableOpacity
         style={styles.input}
         onPress={() => {
@@ -466,7 +463,6 @@ const SharePost = ({ navigation }) => {
         </Text>
       </TouchableOpacity>
 
-      {/* SELECT ROUTE BUTTON */}
       {from && to && (
         <TouchableOpacity
           style={styles.routeButton}
@@ -482,7 +478,6 @@ const SharePost = ({ navigation }) => {
         </TouchableOpacity>
       )}
 
-      {/* OTHER INPUTS */}
       <TouchableOpacity style={styles.input} onPress={() => setShowDatePicker(true)}>
         <Text style={dateTime ? styles.inputText : styles.placeholderText}>
           {dateTime ? `📅 ${dateTime}` : '📅 Select Date'}
@@ -513,7 +508,7 @@ const SharePost = ({ navigation }) => {
         disabled={isLoading}
       >
         <Text style={styles.buttontext}>
-          {isLoading ? '⏳ Posting...' : '✅ Share Post'}
+          {isLoading ? '⏳ Posting...' : ' Share Post'}
         </Text>
       </TouchableOpacity>
 
@@ -596,7 +591,7 @@ const SharePost = ({ navigation }) => {
                 style={styles.confirmButton}
                 onPress={handleManualLocationSubmit}
               >
-                <Text style={styles.confirmButtonText}>✅ Confirm</Text>
+                <Text style={styles.confirmButtonText}> Confirm</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -702,7 +697,7 @@ const SharePost = ({ navigation }) => {
                 setShowRouteMapModal(false);
               }}
             >
-              <Text style={styles.routeButtonTextWhite}>❌ Cancel</Text>
+              <Text style={styles.routeButtonTextWhite}> Cancel</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -711,13 +706,12 @@ const SharePost = ({ navigation }) => {
                 setShowRouteMapModal(false);
               }}
             >
-              <Text style={styles.routeButtonTextWhite}>✅ Confirm Route</Text>
+              <Text style={styles.routeButtonTextWhite}> Confirm Route</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* VEHICLE MODAL */}
       <Modal visible={showVehiclePicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -737,7 +731,6 @@ const SharePost = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* SEATS MODAL */}
       <Modal visible={showSeatsPicker} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -762,7 +755,6 @@ const SharePost = ({ navigation }) => {
 
 export default SharePost;
 
-// ================= STYLES =================
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, backgroundColor: '#f5f7fa' },
   driverHeader: {

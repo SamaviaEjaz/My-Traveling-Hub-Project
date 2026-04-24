@@ -20,7 +20,6 @@ import Driver_OTP from './Screens/Home Screens/Driver_OTP';
 import Passenger_OTP from './Screens/Home Screens/Passenger_OTP';
 
 
-// Admin Dashboard Screens
 import Admin_UpdateProfile from './Screens/Admin_Dashboard/Admin_Update Profile';
 import AdminDashboard from './Screens/Admin_Dashboard/AdminDashboard';
 import DriversAuthorization from './Screens/Admin_Dashboard/DriversAuthorization';
@@ -29,7 +28,6 @@ import AdminHome from './Screens/Admin_Dashboard/Home';
 import AdminProfile from './Screens/Admin_Dashboard/Profile';
 import ViewRegisteredDriver from './Screens/Admin_Dashboard/View Registered Driver';
 
-// Driver Screens
 import DriverChat from './Screens/Driver Screens/ChatTemp';
 import Driver_Dashboard from './Screens/Driver Screens/Driver_Dashboard';
 import Driver_Name from './Screens/Driver Screens/Driver_Name';
@@ -42,7 +40,6 @@ import DriversReviews from './Screens/Driver Screens/DriverReviews';
 import SharePost from './Screens/Driver Screens/Share Post';
 import ViewSharedPost from './Screens/Driver Screens/View Shared Post';
 
-// Passenger Screens
 import PassengerChat from './Screens/Passenger Screens/ChatTemp';
 import PassengerMessages from './Screens/Passenger Screens/Messages';
 import PassengerFeedback from './Screens/Passenger Screens/Feedback';
@@ -60,7 +57,6 @@ import BookRide from './Screens/Passenger Screens/BookRide';
 
 const Stack = createNativeStackNavigator();
 
-// Common header styles for consistency
 const blueHeader = {
   headerStyle: {
     backgroundColor: '#2f74f5',
@@ -154,7 +150,6 @@ export default function App() {
             options={{ title: 'Pending Approval', ...blueHeader }}
           />
 
-          {/* Admin Dashboard Screens */}
           <Stack.Screen
             name="AdminDashboard"
             component={AdminDashboard}
@@ -191,7 +186,6 @@ export default function App() {
             options={{ title: 'Update Profile', ...blueHeader }}
           />
 
-          {/* Driver Screens */}
           <Stack.Screen
             name="Driver_Dashboard"
             component={Driver_Dashboard}

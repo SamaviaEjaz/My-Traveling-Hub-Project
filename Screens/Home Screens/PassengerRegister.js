@@ -56,28 +56,28 @@ const PassengerRegister = () => {
       if (response.ok) {
         await AsyncStorage.setItem('passengerData', JSON.stringify({ fullName, email, phone }));
 
-        // ✅ OTP send کریں registration کے بعد
-        try {
-          await fetch('http://10.84.115.73:5000/api/passengers/send-otp', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone }),
-          });
-        } catch (otpError) {
-          console.error('OTP send error:', otpError);
+        if (data.token) {
+          await AsyncStorage.setItem('passengerToken', data.token);
         }
-
-        Alert.alert(
-          'Registration Successful',
-          `OTP has been sent to your phone number ${phone}.`,
-          [{ text: 'OK', onPress: () => navigation.navigate('Passenger_OTP', { phone }) }]
-        );
 
         setFullName('');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
         setPhone('');
+
+        Alert.alert(
+          'Registration Successful',
+          'Welcome! Your account has been created.',
+          [{
+            text: 'OK',
+            onPress: () => navigation.reset({
+              index: 0,
+              routes: [{ name: 'Passenger_Dashboard' }],
+            }),
+          }]
+        );
+
       } else {
         if (data.errors) {
           data.errors.forEach(error => {
@@ -146,7 +146,7 @@ const PassengerRegister = () => {
 
         <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
           <Text>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('LoginPage')}>
+          <TouchableOpacity onPress={() => navigation.navigate('PassengerLogin')}>
             <Text style={{ color: '#0d09fca3', fontWeight: 'bold' }}>Login</Text>
           </TouchableOpacity>
         </View>

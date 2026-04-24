@@ -15,16 +15,14 @@ const BookRide = ({ navigation }) => {
   const handleBooking = async () => {
     try {
       const res = await axios.post(`${BASE_URL}/api/bookings`, {
-        rideId: "123abc",
+        rideId: "123abc",   
         driverName,
-        from,
+        from,  
         to,
         date,
         time,
         vehicle,
         seats
-      }, {
-        headers: { 'ngrok-skip-browser-warning': 'true' }
       });
       if (res.data.success) {
         Alert.alert("Success", "Booking created!");

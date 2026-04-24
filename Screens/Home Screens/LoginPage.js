@@ -1,4 +1,3 @@
-// LoginPage.js
 import { useNavigation } from '@react-navigation/native';
 import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
@@ -170,4 +169,4 @@ const styles = StyleSheet.create({
   eyeIcon: { padding: 5 },
 });
 
-export default LoginPage;sss
+export default LoginPage;
